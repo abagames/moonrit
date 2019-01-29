@@ -1,0 +1,15 @@
+{
+  "name": "moonrit",
+  "version": "1.0.0",
+  "description": "16 x 16 LED matrix games",
+  "scripts": {
+    "watch": "parcel src/index.html -d tmp",
+    "build": "parcel build src/index.html -d docs --no-source-maps --public-url ./"
+  },
+  "author": "abagames",
+  "license": "MIT",
+  "devDependencies": {
+    "parcel-bundler": "^1.11.0",
+    "typescript": "^3.2.4"
+  }
+}
