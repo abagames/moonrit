@@ -1,10 +1,37 @@
 import * as view from "./view";
 import * as matrix from "./matrix";
+import * as sga from "./simpleGameActor";
+import { Actor } from "./actor";
+import * as keyboard from "./keyboard";
 
 function init() {
   matrix.init();
-  matrix.print(
-    `
+  keyboard.init({ isFourWaysStick: true, isUsingStickKeysAsButton: true });
+  sga.setActorClass(Actor);
+  sga.reset();
+  sga.spawn(player);
+}
+
+function player(a: Actor) {
+  a.pos.set(7, 13);
+  a.addUpdater(() => {
+    if (keyboard.isJustPressed) {
+      a.pos.add(keyboard.stick);
+    }
+  });
+}
+
+let ticks = 0;
+
+function update() {
+  matrix.print(bgStr, 1, 0, -1);
+  keyboard.update();
+  sga.update();
+  matrix.update();
+  ticks++;
+}
+
+const bgStr = `
 gggggggggggggggg
 g  g  g  g  g  g
 bbbbbbbbbbbbbbbb
@@ -21,25 +48,6 @@ pppppppppppppppp
 pppppppppppppppp
 pppppppppppppppp
 pppppppppppppppp
-`,
-    1,
-    0,
-    -1
-  );
-}
-
-let ticks = 0;
-
-function update() {
-  /*for (let x = 0; x < 16; x++) {
-    for (let y = 0; y < 16; y++) {
-      const led = matrix.leds[x][y];
-      led.setColor((y + Math.floor(ticks / 30)) % 8);
-      led.setBrightness((x + y * 2 + Math.floor(ticks / 20)) % 4);
-    }
-  }*/
-  matrix.update();
-  ticks++;
-}
+`;
 
 view.init(init, update);

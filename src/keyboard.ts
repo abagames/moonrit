@@ -10,6 +10,7 @@ let isFourWaysStick = false;
 let isInitialized = false;
 
 const isKeyPressing = range(256).map(() => false);
+const isKeyPressed = range(256).map(() => false);
 const stickKeys = [
   [39, 68, 102],
   [40, 83, 101, 98],
@@ -35,18 +36,23 @@ const buttonKeys = [
   13
 ];
 
-export function init(options: {
+export function init(options?: {
   isUsingStickKeysAsButton?: boolean;
   isFourWaysStick?: boolean;
 }) {
-  if (options.isUsingStickKeysAsButton != null) {
-    isUsingStickKeysAsButton = options.isUsingStickKeysAsButton;
+  if (isInitialized) {
+    return;
   }
-  if (options.isFourWaysStick != null) {
-    isFourWaysStick = options.isFourWaysStick;
+  if (options != null) {
+    if (options.isUsingStickKeysAsButton != null) {
+      isUsingStickKeysAsButton = options.isUsingStickKeysAsButton;
+    }
+    if (options.isFourWaysStick != null) {
+      isFourWaysStick = options.isFourWaysStick;
+    }
   }
   document.addEventListener("keydown", e => {
-    isKeyPressing[e.keyCode] = true;
+    isKeyPressing[e.keyCode] = isKeyPressed[e.keyCode] = true;
   });
   document.addEventListener("keyup", e => {
     isKeyPressing[e.keyCode] = false;
@@ -59,17 +65,22 @@ export function update() {
     return;
   }
   const pp = isPressed;
-  isPressed = false;
+  isPressed = isJustPressed = false;
   stick.set(0);
   stickKeys.forEach((ks, i) => {
     ks.forEach(k => {
-      if (isKeyPressing[k]) {
+      if (isKeyPressing[k] || isKeyPressed[k]) {
         stick.x += stickXys[i][0];
         stick.y += stickXys[i][1];
         if (isUsingStickKeysAsButton) {
           isPressed = true;
         }
-        return false;
+        if (isKeyPressed[k]) {
+          isKeyPressed[k] = false;
+          if (isUsingStickKeysAsButton && !pp) {
+            isJustPressed = true;
+          }
+        }
       }
     });
   });
@@ -80,17 +91,26 @@ export function update() {
   buttonKeys.forEach(k => {
     if (isKeyPressing[k]) {
       isPressed = true;
-      return false;
+    }
+    if (isKeyPressed[k]) {
+      isKeyPressed[k] = false;
+      if (!pp) {
+        isPressed = isJustPressed = true;
+      }
     }
   });
-  isJustPressed = !pp && isPressed;
 }
 
+const angleOffsets = [1, 0, 1, 1, 0, 1, -1, 1, -1, 0, -1, -1, 0, -1, 1, -1];
 function setStickAngle(a: number) {
   const wayAngle = isFourWaysStick ? Math.PI / 2 : Math.PI / 4;
   const angleStep = isFourWaysStick ? 2 : 1;
   stickAngle = wrap(Math.round(a / wayAngle) * angleStep, 0, 8);
-  stick.set(0);
-  stick.addAngle(stickAngle * wayAngle, 1);
+  stick.set(angleOffsets[stickAngle * 2], angleOffsets[stickAngle * 2 + 1]);
   stickAngle++;
+}
+
+export function clearJustPressed() {
+  isJustPressed = false;
+  isPressed = true;
 }
