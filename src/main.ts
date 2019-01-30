@@ -10,9 +10,9 @@ let ticks = 0;
 function update() {
   for (let x = 0; x < 16; x++) {
     for (let y = 0; y < 16; y++) {
-      matrix.leds[x][y].setBrightness(
-        Math.sin(ticks * 0.1 + x * 0.1 + y * 0.2) * 0.5 + 0.5
-      );
+      const led = matrix.leds[x][y];
+      led.setColor(((x + Math.floor(ticks / 30)) % 7) + 1);
+      led.setBrightness(((x + y * 2 + Math.floor(ticks / 20)) % 3) + 1);
     }
   }
   matrix.update();

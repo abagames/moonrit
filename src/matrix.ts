@@ -7,7 +7,7 @@ export function init() {
   for (let x = 0; x < count; x++) {
     const l = [];
     for (let y = 0; y < count; y++) {
-      const led = new Led(0xe91e63, {
+      const led = new Led({
         x: (x + 1.2) * size,
         y: (y + 1.2) * size
       });

@@ -24,6 +24,8 @@ export function init(_initFunc: Function, _updateFunc: Function) {
   update();
 }
 
+const bloomRatio = 1.5;
+
 export function fillRect(
   x: number,
   y: number,
@@ -35,9 +37,9 @@ export function fillRect(
   const b = Math.sqrt(brightness);
   context.fillStyle = `rgb(${color.r * b},${color.g * b},${color.b * b})`;
   context.fillRect(x - width / 2, y - width / 2, width, height);
-  bloomContext.fillStyle = `rgb(${color.r * brightness * 2},${color.g *
+  bloomContext.fillStyle = `rgb(${color.r * brightness * bloomRatio},${color.g *
     brightness *
-    2},${color.b * brightness * 2})`;
+    bloomRatio},${color.b * brightness * bloomRatio})`;
   const w = width * brightness;
   const h = height * brightness;
   bloomContext.fillRect(
