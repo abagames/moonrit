@@ -39,6 +39,9 @@ function initGame() {
       }
     }
   });
+  for (let i = 0; i < 200; i++) {
+    sga.update();
+  }
 }
 
 function player(a: Actor) {
