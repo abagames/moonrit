@@ -69,7 +69,11 @@ export function printChar(
   if (x < 0 || x >= count || y < 0 || y >= count) {
     return;
   }
-  leds[x][y].setColor(" rgybpcw".indexOf(c));
+  const ci = "-rgybpcw".indexOf(c);
+  if (ci < 0) {
+    return;
+  }
+  leds[x][y].setColor(ci);
   leds[x][y].setBrightness(brightnessIndex);
 }
 

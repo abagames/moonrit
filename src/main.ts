@@ -106,18 +106,18 @@ function update() {
 
 const bgStr = `
 gggggggggggggggg
-g  g  g  g  g  g
+g--g--g--g--g--g
 bbbbbbbbbbbbbbbb
 bbbbbbbbbbbbbbbb
 bbbbbbbbbbbbbbbb
 bbbbbbbbbbbbbbbb
 bbbbbbbbbbbbbbbb
 pppppppppppppppp
-                
-                
-                
-                
-                
+----------------
+----------------
+----------------
+----------------
+----------------
 pppppppppppppppp
 pppppppppppppppp
 pppppppppppppppp
