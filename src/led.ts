@@ -11,9 +11,12 @@ const colors = [
   0x03a9f4,
   0xeeeeee
 ];
-const brightnesss = [0, 0.33, 0.66, 1];
+const brightnesss = [0, 0.4, 0.7, 1];
+const response = 0.36;
 
 export class Led {
+  colorIndex = 0;
+  brightnessIndex = 0;
   color = { r: 0, g: 0, b: 0 };
   targetColor = { r: 0, g: 0, b: 0 };
   brightness = 0;
@@ -22,6 +25,7 @@ export class Led {
   constructor(public pos = { x: 0, y: 0 }) {}
 
   setColor(colorIndex: number) {
+    this.colorIndex = colorIndex;
     const c = colors[colorIndex];
     this.targetColor = {
       r: (c & 0xff0000) >> 16,
@@ -30,15 +34,16 @@ export class Led {
     };
   }
 
-  setBrightness(brightNessIndex: number) {
-    this.targetBrightness = brightnesss[brightNessIndex];
+  setBrightness(brightnessIndex: number) {
+    this.brightnessIndex = brightnessIndex;
+    this.targetBrightness = brightnesss[brightnessIndex];
   }
 
   update() {
-    this.color.r += (this.targetColor.r - this.color.r) * 0.3;
-    this.color.g += (this.targetColor.g - this.color.g) * 0.3;
-    this.color.b += (this.targetColor.b - this.color.b) * 0.3;
-    this.brightness += (this.targetBrightness - this.brightness) * 0.3;
+    this.color.r += (this.targetColor.r - this.color.r) * response;
+    this.color.g += (this.targetColor.g - this.color.g) * response;
+    this.color.b += (this.targetColor.b - this.color.b) * response;
+    this.brightness += (this.targetBrightness - this.brightness) * response;
     if (
       this.color.r + this.color.g + this.color.b < 64 ||
       this.brightness < 0.1
