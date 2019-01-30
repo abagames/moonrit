@@ -4,10 +4,11 @@ import * as matrix from "./matrix";
 
 export class Actor extends sga.Actor {
   pos = new Vector();
-  colorChar = "w";
+  str = "w";
+  brightness = 2;
 
   update() {
     super.update();
-    matrix.printChar(this.colorChar, 2, this.pos.x, this.pos.y);
+    matrix.print(this.str, this.brightness, this.pos.x, this.pos.y);
   }
 }
