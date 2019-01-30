@@ -34,10 +34,14 @@ function init() {
 }
 
 function player(a: Actor) {
+  const instName = "synth_strings_2";
+  sound.loadInstrument(instName);
+  const notes = sound.getNotes("major pentatonic", "A", 3, 5, 1);
   a.setPriority(0.5);
   a.pos.set(7, 13);
   a.addUpdater(() => {
     if (keyboard.isJustPressed && keyboard.stick.length > 0) {
+      matrix.scheduleSound(instName, notes[15 - a.pos.y]);
       a.pos.add(keyboard.stick);
     }
   });

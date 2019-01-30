@@ -53,8 +53,6 @@ export function print(
   });
 }
 
-const colorChars = " rgybpcw";
-
 export function printChar(
   c: string,
   brightnessIndex: number,
@@ -64,7 +62,7 @@ export function printChar(
   if (x < 0 || x >= count || y < 0 || y >= count) {
     return;
   }
-  leds[x][y].setColor(colorChars.indexOf(c));
+  leds[x][y].setColor(" rgybpcw".indexOf(c));
   leds[x][y].setBrightness(brightnessIndex);
 }
 
@@ -76,6 +74,12 @@ export function update() {
     }
     markerLeds[x].update();
   }
+}
+
+let scheduledSound: { instrumentName: string; note: string };
+
+export function scheduleSound(instrumentName: string, note: string) {
+  scheduledSound = { instrumentName, note };
 }
 
 function initMarkerSound() {
@@ -116,6 +120,14 @@ function stepMarker() {
   printMarker(0, markerPos);
   markerPos = (markerPos + 1) % count;
   playMarker();
+  if (scheduledSound != null) {
+    sound.play(
+      scheduledSound.instrumentName,
+      scheduledSound.note,
+      nextScheduledSecond
+    );
+    scheduledSound = undefined;
+  }
   printMarker(2, markerPos);
   nextScheduledSecond += 60 / tempo;
 }
