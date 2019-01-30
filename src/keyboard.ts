@@ -6,8 +6,10 @@ export let isPressed = false;
 export let isJustPressed = false;
 export let stick = new Vector();
 export let stickAngle: number;
-let isUsingStickKeysAsButton = false;
-let isFourWaysStick = false;
+let options = {
+  isUsingStickKeysAsButton: false,
+  isFourWaysStick: false
+};
 let isInitialized = false;
 
 const isKeyPressing = range(256).map(() => false);
@@ -37,20 +39,13 @@ const buttonKeys = [
   13
 ];
 
-export function init(options?: {
+export function init(_options?: {
   isUsingStickKeysAsButton?: boolean;
   isFourWaysStick?: boolean;
 }) {
+  options = { ...options, ..._options };
   if (isInitialized) {
     return;
-  }
-  if (options != null) {
-    if (options.isUsingStickKeysAsButton != null) {
-      isUsingStickKeysAsButton = options.isUsingStickKeysAsButton;
-    }
-    if (options.isFourWaysStick != null) {
-      isFourWaysStick = options.isFourWaysStick;
-    }
   }
   document.addEventListener("keydown", e => {
     isKeyPressing[e.keyCode] = isKeyPressed[e.keyCode] = true;
@@ -74,12 +69,12 @@ export function update() {
       if (isKeyPressing[k] || isKeyPressed[k]) {
         stick.x += stickXys[i][0];
         stick.y += stickXys[i][1];
-        if (isUsingStickKeysAsButton) {
+        if (options.isUsingStickKeysAsButton) {
           isPressed = true;
         }
         if (isKeyPressed[k]) {
           isKeyPressed[k] = false;
-          if (isUsingStickKeysAsButton && !pp) {
+          if (options.isUsingStickKeysAsButton && !pp) {
             isJustPressed = true;
           }
         }
@@ -105,8 +100,8 @@ export function update() {
 
 const angleOffsets = [1, 0, 1, 1, 0, 1, -1, 1, -1, 0, -1, -1, 0, -1, 1, -1];
 function setStickAngle(a: number) {
-  const wayAngle = isFourWaysStick ? Math.PI / 2 : Math.PI / 4;
-  const angleStep = isFourWaysStick ? 2 : 1;
+  const wayAngle = options.isFourWaysStick ? Math.PI / 2 : Math.PI / 4;
+  const angleStep = options.isFourWaysStick ? 2 : 1;
   stickAngle = wrap(Math.round(a / wayAngle) * angleStep, 0, 8);
   stick.set(angleOffsets[stickAngle * 2], angleOffsets[stickAngle * 2 + 1]);
   stickAngle++;

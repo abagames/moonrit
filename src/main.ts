@@ -12,9 +12,17 @@ let carSpawinings = [0, 0, 0, 0, 0];
 let _player;
 
 function init() {
-  matrix.init();
+  matrix.init({ tempo: 300, isMarkerHorizontal: false });
+  matrix.addMarkerSounds(0, "synth_drum", "major pentatonic", "A", 2, 5, 3);
+  matrix.addMarkerSounds(3, "melodic_tom", "major pentatonic", "A", 3, 5, 2);
+  matrix.addMarkerSounds(5, "kalimba", "major pentatonic", "A", 3, 5, 2);
+  matrix.addMarkerSounds(7, "synth_bass_2", "major pentatonic", "A", 2, 1, 9);
   keyboard.init({ isFourWaysStick: true, isUsingStickKeysAsButton: true });
   sga.setActorClass(Actor);
+  initGame();
+}
+
+function initGame() {
   sga.reset();
   _player = sga.spawn(player);
   sga.addUpdater(u => {
@@ -34,7 +42,7 @@ function init() {
 }
 
 function player(a: Actor) {
-  const instName = "synth_strings_2";
+  const instName = "pad_3_polysynth";
   sound.loadInstrument(instName);
   const notes = sound.getNotes("major pentatonic", "A", 3, 5, 1);
   a.setPriority(0.5);

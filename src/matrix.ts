@@ -9,10 +9,16 @@ let markerPos = count - 1;
 let markerSounds: { instrumentName: string; note: string }[];
 let nextScheduledSecond = 0;
 let isMakerPlayings: boolean[] = [];
-const tempo = 300;
-const isMarkerHorizontal = false;
+let options = {
+  tempo: 300,
+  isMarkerHorizontal: true
+};
 
-export function init() {
+export function init(_options?: {
+  tempo?: number;
+  isMarkerHorizontal?: boolean;
+}) {
+  options = { ...options, ..._options };
   for (let x = 0; x < count; x++) {
     const l = [];
     for (let y = 0; y < count; y++) {
@@ -26,7 +32,7 @@ export function init() {
     let mx = (x + 1.2) * size;
     let my = size * 0.5;
     let ml: Led;
-    if (isMarkerHorizontal) {
+    if (options.isMarkerHorizontal) {
       ml = new Led({ x: mx, y: my });
       ml.height /= 2;
     } else {
@@ -85,13 +91,9 @@ export function scheduleSound(instrumentName: string, note: string) {
 function initMarkerSound() {
   markerSounds = range(count).map(() => null);
   isMakerPlayings = range(count).map(() => false);
-  addMarkerSounds(0, "synth_drum", "major pentatonic", "A", 2, 5, 3);
-  addMarkerSounds(3, "melodic_tom", "major pentatonic", "A", 3, 5, 2);
-  addMarkerSounds(5, "kalimba", "major pentatonic", "A", 3, 5, 2);
-  addMarkerSounds(7, "synth_bass_2", "major pentatonic", "A", 2, 1, 9);
 }
 
-function addMarkerSounds(
+export function addMarkerSounds(
   pos: number,
   instrumentName: string,
   scale: string,
@@ -129,7 +131,7 @@ function stepMarker() {
     scheduledSound = undefined;
   }
   printMarker(2, markerPos);
-  nextScheduledSecond += 60 / tempo;
+  nextScheduledSecond += 60 / options.tempo;
 }
 
 function printMarker(brightnessIndex: number, x: number) {
@@ -138,7 +140,9 @@ function printMarker(brightnessIndex: number, x: number) {
 
 function playMarker() {
   for (let i = 0; i < count; i++) {
-    let led = isMarkerHorizontal ? leds[markerPos][i] : leds[i][markerPos];
+    let led = options.isMarkerHorizontal
+      ? leds[markerPos][i]
+      : leds[i][markerPos];
     if (!isMakerPlayings[i] && led.brightnessIndex >= 2) {
       const ms = markerSounds[i];
       if (ms != null) {

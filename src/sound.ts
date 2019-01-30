@@ -8,6 +8,9 @@ export const audioContext = new AudioContext();
 let instruments: { [s: string]: any } = {};
 
 export function loadInstrument(name: string) {
+  if (instruments[name] != null) {
+    return;
+  }
   (Soundfont.instrument as any)(audioContext, name, {
     soundfont: "FluidR3_GM"
   }).then((inst: any) => {
