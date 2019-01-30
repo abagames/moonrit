@@ -21,18 +21,21 @@ export function loadInstrument(name: string) {
 export function getNotes(
   _scale: string,
   baseNote: string,
-  octaveFrom: number,
-  octaveTo: number,
-  skipCount: number
+  baseOctave: number,
+  skipCount: number,
+  count: number
 ) {
-  return Array.prototype.concat.apply(
-    [],
-    range(octaveTo - octaveFrom + 1).map(oi =>
-      scale(_scale)
-        .map((transpose as any)(`${baseNote}${octaveFrom + oi}`))
-        .filter((_: any, i: number) => i % skipCount === 0)
+  const s = scale(_scale);
+  const oc = Math.ceil((count * skipCount) / s.length);
+  return Array.prototype.concat
+    .apply(
+      [],
+      range(oc).map(oi =>
+        s.map((transpose as any)(`${baseNote}${baseOctave + oi}`))
+      )
     )
-  );
+    .filter((_: any, i: number) => i % skipCount === 0)
+    .splice(0, count);
 }
 
 export function play(

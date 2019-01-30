@@ -98,14 +98,12 @@ export function addMarkerSounds(
   instrumentName: string,
   scale: string,
   baseNote: string,
-  octaveFrom: number,
+  baseOctave: number,
   skipCount: number,
   count: number
 ) {
   sound.loadInstrument(instrumentName);
-  const notes = sound
-    .getNotes(scale, baseNote, octaveFrom, 8, skipCount)
-    .slice(0, count);
+  const notes = sound.getNotes(scale, baseNote, baseOctave, skipCount, count);
   notes.forEach((note, i) => {
     markerSounds[pos + i] = { instrumentName, note };
   });
