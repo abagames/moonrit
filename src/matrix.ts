@@ -6,6 +6,7 @@ export const count = 16;
 export const leds: Led[][] = [];
 const markerLeds: Led[] = [];
 let markerPos = count - 1;
+// TODO: multiple marker sounds with filter
 let markerSounds: { instrumentName: string; note: string }[];
 let nextScheduledSecond = 0;
 let isMakerPlayings: boolean[] = [];

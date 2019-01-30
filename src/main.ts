@@ -51,6 +51,7 @@ function player(a: Actor) {
   a.setPriority(0.5);
   a.pos.set(7, 13);
   a.addUpdater(() => {
+    // TODO: move with pointer
     if (keyboard.isJustPressed && keyboard.stick.length > 0) {
       matrix.scheduleSound(instName, notes[15 - a.pos.y]);
       a.pos.add(keyboard.stick);
