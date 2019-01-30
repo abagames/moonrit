@@ -53,8 +53,8 @@ function player(a: Actor) {
   a.addUpdater(() => {
     // TODO: move with pointer
     if (keyboard.isJustPressed && keyboard.stick.length > 0) {
-      matrix.scheduleSound(instName, notes[15 - a.pos.y]);
       a.pos.add(keyboard.stick);
+      matrix.scheduleSound(instName, notes[15 - a.pos.y]);
     }
   });
 }
