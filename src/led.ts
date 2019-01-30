@@ -21,6 +21,8 @@ export class Led {
   targetColor = { r: 0, g: 0, b: 0 };
   brightness = 0;
   targetBrightness = 0;
+  width = size;
+  height = size;
 
   constructor(public pos = { x: 0, y: 0 }) {}
 
@@ -53,8 +55,8 @@ export class Led {
     view.fillRect(
       this.pos.x,
       this.pos.y,
-      size * 0.5,
-      size * 0.5,
+      this.width * 0.5,
+      this.height * 0.5,
       this.color,
       this.brightness
     );

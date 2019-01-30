@@ -1,5 +1,6 @@
 import { Vector } from "./vector";
 import { range, wrap } from "./math";
+import * as sound from "./sound";
 
 export let isPressed = false;
 export let isJustPressed = false;
@@ -53,6 +54,7 @@ export function init(options?: {
   }
   document.addEventListener("keydown", e => {
     isKeyPressing[e.keyCode] = isKeyPressed[e.keyCode] = true;
+    sound.resumeAudioContext();
   });
   document.addEventListener("keyup", e => {
     isKeyPressing[e.keyCode] = false;

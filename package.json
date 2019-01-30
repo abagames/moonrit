@@ -12,5 +12,8 @@
     "parcel-bundler": "^1.11.0",
     "typescript": "^3.2.4"
   },
-  "dependencies": {}
+  "dependencies": {
+    "soundfont-player": "^0.11.0",
+    "tonal": "^2.1.2"
+  }
 }

@@ -4,6 +4,7 @@ import * as sga from "./simpleGameActor";
 import { Actor } from "./actor";
 import * as keyboard from "./keyboard";
 import { Random } from "./random";
+import * as sound from "./sound";
 
 let random = new Random();
 let logSpawinings = [0, 0, 0, 0, 0];
@@ -16,7 +17,7 @@ function init() {
   sga.setActorClass(Actor);
   sga.reset();
   _player = sga.spawn(player);
-  sga.addUpdater(() => {
+  sga.addUpdater(u => {
     for (let i = 0; i < 5; i++) {
       logSpawinings[i]--;
       if (logSpawinings[i] < 0) {
