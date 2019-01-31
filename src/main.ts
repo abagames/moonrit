@@ -31,7 +31,7 @@ function initGame() {
       logSpawinings[i]--;
       if (logSpawinings[i] < 0) {
         sga.spawn(log, i);
-        logSpawinings[i] = random.getInt(100, 150) * [1.5, 1.2, 1.8, 1, 1][i];
+        logSpawinings[i] = random.getInt(100, 150) * [1.5, 1.1, 1, 1.4, 1.1][i];
       }
       carSpawinings[i]--;
       if (carSpawinings[i] < 0) {
@@ -65,7 +65,7 @@ function log(a: Actor & { speed: number; way: number }, y: number) {
   a.way = [1, -1, 1, 1, -1][y];
   a.pos.x = a.way > 0 ? -a.str.length : 16;
   a.pos.y = y + 2;
-  a.speed = [35, 25, 12, 25, 20][y];
+  a.speed = [27, 22, 12, 30, 20][y];
   a.addUpdater(() => {
     if (a.ticks % a.speed === 0) {
       if (
