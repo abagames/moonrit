@@ -5,11 +5,7 @@ import { Actor } from "./actor";
 import * as keyboard from "./keyboard";
 import { Random } from "./random";
 import * as sound from "./sound";
-
-let random = new Random();
-let logSpawinings = [0, 0, 0, 0, 0];
-let carSpawinings = [0, 0, 0, 0, 0];
-let _player;
+import { range } from "./math";
 
 function init() {
   matrix.init({ tempo: 300, isMarkerHorizontal: false });
@@ -23,20 +19,54 @@ function init() {
   initGame();
 }
 
+type StageType = "log" | "car" | "bank";
+const stage: [number, number, number, StageType, number][] = [
+  [3, 1, 27, "log", 1.5],
+  [2, -1, 22, "log", 1.1],
+  [4, 1, 12, "log", 1],
+  [3, 1, 30, "log", 1.4],
+  [3, -1, 20, "log", 1.1],
+  [0, 0, 0, "bank", 0],
+  [2, -1, 40, "car", 1.5],
+  [1, 1, 8, "car", 1],
+  [1, -1, 25, "car", 1],
+  [1, 1, 20, "car", 1],
+  [1, -1, 30, "car", 1]
+];
+let spawnings = range(11).map(() => 0);
+let _player;
+let random = new Random();
+let bgStr: string;
+
 function initGame() {
   sga.reset();
+  bgStr = `gggggggggggggggg
+g--g--g--g--g--g
+${stage
+    .map(s => {
+      switch (s[3]) {
+        case "log":
+          return "bbbbbbbbbbbbbbbb";
+        case "car":
+          return "----------------";
+        case "bank":
+          return "pppppppppppppppp";
+      }
+    })
+    .join("\n")}pppppppppppppppp
+pppppppppppppppp
+pppppppppppppppp`;
   _player = sga.spawn(player);
   sga.addUpdater(u => {
-    for (let i = 0; i < 5; i++) {
-      logSpawinings[i]--;
-      if (logSpawinings[i] < 0) {
-        sga.spawn(log, i);
-        logSpawinings[i] = random.getInt(100, 150) * [1.5, 1.1, 1, 1.4, 1.1][i];
+    for (let i = 0; i < 11; i++) {
+      const st = stage[i];
+      if (st[3] === "bank") {
+        continue;
       }
-      carSpawinings[i]--;
-      if (carSpawinings[i] < 0) {
-        sga.spawn(car, i);
-        carSpawinings[i] = random.getInt(100, 150) * (i == 0 ? 1.5 : 1);
+      spawnings[i]--;
+      if (spawnings[i] < 0) {
+        sga.spawn(logOrCar, i + 2, st[0], st[1], st[2], st[3]);
+        spawnings[i] = random.getInt(100, 150) * st[4];
       }
     }
   });
@@ -60,37 +90,30 @@ function player(a: Actor) {
   });
 }
 
-function log(a: Actor & { speed: number; way: number }, y: number) {
-  a.str = ["yyy", "yy", "yyyy", "yyy", "yyy"][y];
-  a.way = [1, -1, 1, 1, -1][y];
-  a.pos.x = a.way > 0 ? -a.str.length : 16;
-  a.pos.y = y + 2;
-  a.speed = [27, 22, 12, 30, 20][y];
+function logOrCar(
+  a: Actor,
+  y: number,
+  length: number,
+  way: number,
+  speed: number,
+  type: StageType
+) {
+  const c = type === "log" ? "y" : "r";
+  a.str = range(length)
+    .map(() => c)
+    .join("");
+  a.pos.set(way > 0 ? -a.str.length : 16, y);
   a.addUpdater(() => {
-    if (a.ticks % a.speed === 0) {
+    if (a.ticks % speed === 0) {
       if (
+        type === "log" &&
         _player.pos.y === a.pos.y &&
         a.pos.x <= _player.pos.x &&
         _player.pos.x < a.pos.x + a.str.length
       ) {
-        _player.pos.x += a.way;
+        _player.pos.x += way;
       }
-      a.pos.x += a.way;
-      if (a.pos.x <= -a.str.length || a.pos.x >= 16) {
-        a.remove();
-      }
-    }
-  });
-}
-
-function car(a: Actor & { speed: number }, y: number) {
-  a.str = y == 0 ? "rr" : "r";
-  a.pos.x = y % 2 == 1 ? -a.str.length : 16;
-  a.pos.y = y + 8;
-  a.speed = [40, 8, 25, 20, 30][y];
-  a.addUpdater(() => {
-    if (a.ticks % a.speed === 0) {
-      a.pos.x += y % 2 == 1 ? 1 : -1;
+      a.pos.x += way;
       if (a.pos.x <= -a.str.length || a.pos.x >= 16) {
         a.remove();
       }
@@ -99,29 +122,10 @@ function car(a: Actor & { speed: number }, y: number) {
 }
 
 function update() {
-  matrix.print(bgStr, 1, 0, -1);
+  matrix.print(bgStr, 1, 0, 0);
   keyboard.update();
   sga.update();
   matrix.update();
 }
-
-const bgStr = `
-gggggggggggggggg
-g--g--g--g--g--g
-bbbbbbbbbbbbbbbb
-bbbbbbbbbbbbbbbb
-bbbbbbbbbbbbbbbb
-bbbbbbbbbbbbbbbb
-bbbbbbbbbbbbbbbb
-pppppppppppppppp
-----------------
-----------------
-----------------
-----------------
-----------------
-pppppppppppppppp
-pppppppppppppppp
-pppppppppppppppp
-`;
 
 view.init(init, update);
