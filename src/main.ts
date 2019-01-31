@@ -13,10 +13,11 @@ let _player;
 
 function init() {
   matrix.init({ tempo: 300, isMarkerHorizontal: false });
-  matrix.addMarkerSounds(0, "synth_drum", "major pentatonic", "A", 2, 5, 4);
-  matrix.addMarkerSounds(4, "synth_bass_2", "major pentatonic", "A", 2, 1, 8);
-  matrix.addMarkerSounds(12, "melodic_tom", "major pentatonic", "A", 3, 5, 2);
-  matrix.addMarkerSounds(14, "kalimba", "major pentatonic", "A", 3, 5, 2);
+  const ms = matrix.addMarkerSound(l => l.brightnessIndex >= 2);
+  ms.add(0, "synth_drum", "major pentatonic", "A", 2, 5, 4);
+  ms.add(4, "synth_bass_2", "major pentatonic", "A", 2, 1, 8);
+  ms.add(12, "melodic_tom", "major pentatonic", "A", 4, 5, 2);
+  ms.add(14, "kalimba", "major pentatonic", "A", 3, 5, 2);
   keyboard.init({ isFourWaysStick: true, isUsingStickKeysAsButton: true });
   sga.setActorClass(Actor);
   initGame();

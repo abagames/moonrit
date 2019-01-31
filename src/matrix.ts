@@ -5,11 +5,9 @@ import { range } from "./math";
 export const count = 16;
 export const leds: Led[][] = [];
 const markerLeds: Led[] = [];
+let markerSounds: MarkerSound[];
 let markerPos = count - 1;
-// TODO: multiple marker sounds with filter
-let markerSounds: { instrumentName: string; note: string }[];
 let nextScheduledSecond = 0;
-let isMakerPlayings: boolean[] = [];
 let options = {
   tempo: 300,
   isMarkerHorizontal: true
@@ -19,6 +17,10 @@ export function init(_options?: {
   tempo?: number;
   isMarkerHorizontal?: boolean;
 }) {
+  markerSounds = [];
+  if (leds.length > 0) {
+    return;
+  }
   options = { ...options, ..._options };
   for (let x = 0; x < count; x++) {
     const l = [];
@@ -43,7 +45,6 @@ export function init(_options?: {
     ml.setColor(7);
     markerLeds.push(ml);
   }
-  initMarkerSound();
 }
 
 export function print(
@@ -93,25 +94,54 @@ export function scheduleSound(instrumentName: string, note: string) {
   scheduledSound = { instrumentName, note };
 }
 
-function initMarkerSound() {
-  markerSounds = range(count).map(() => null);
-  isMakerPlayings = range(count).map(() => false);
+export class MarkerSound {
+  sounds: { instrumentName: string; note: string }[] = range(count).map(
+    () => null
+  );
+  isPlayings = range(count).map(() => false);
+
+  constructor(public filter: (l: Led) => boolean) {}
+
+  add(
+    pos: number,
+    instrumentName: string,
+    scale: string,
+    baseNote: string,
+    baseOctave: number,
+    skipCount: number,
+    count: number
+  ) {
+    sound.loadInstrument(instrumentName);
+    const notes = sound.getNotes(scale, baseNote, baseOctave, skipCount, count);
+    notes.forEach((note, i) => {
+      this.sounds[pos + i] = { instrumentName, note };
+    });
+  }
+
+  play() {
+    for (let i = 0; i < count; i++) {
+      let led = options.isMarkerHorizontal
+        ? leds[markerPos][i]
+        : leds[i][markerPos];
+      if (this.filter(led)) {
+        if (!this.isPlayings[i]) {
+          const s = this.sounds[i];
+          if (s != null) {
+            sound.play(s.instrumentName, s.note, nextScheduledSecond);
+          }
+          this.isPlayings[i] = true;
+        }
+      } else {
+        this.isPlayings[i] = false;
+      }
+    }
+  }
 }
 
-export function addMarkerSounds(
-  pos: number,
-  instrumentName: string,
-  scale: string,
-  baseNote: string,
-  baseOctave: number,
-  skipCount: number,
-  count: number
-) {
-  sound.loadInstrument(instrumentName);
-  const notes = sound.getNotes(scale, baseNote, baseOctave, skipCount, count);
-  notes.forEach((note, i) => {
-    markerSounds[pos + i] = { instrumentName, note };
-  });
+export function addMarkerSound(filter: (l: Led) => boolean) {
+  const ms = new MarkerSound(filter);
+  markerSounds.push(ms);
+  return ms;
 }
 
 function stepMarker() {
@@ -142,18 +172,7 @@ function printMarker(brightnessIndex: number, x: number) {
 }
 
 function playMarker() {
-  for (let i = 0; i < count; i++) {
-    let led = options.isMarkerHorizontal
-      ? leds[markerPos][i]
-      : leds[i][markerPos];
-    if (!isMakerPlayings[i] && led.brightnessIndex >= 2) {
-      const ms = markerSounds[i];
-      if (ms != null) {
-        sound.play(ms.instrumentName, ms.note, nextScheduledSecond);
-      }
-      isMakerPlayings[i] = true;
-    } else {
-      isMakerPlayings[i] = false;
-    }
-  }
+  markerSounds.forEach(ms => {
+    ms.play();
+  });
 }
