@@ -100,7 +100,7 @@ export class MarkerSound {
   );
   isPlayings = range(count).map(() => false);
 
-  constructor(public filter: (l: Led) => boolean) {}
+  constructor(public filter: (l: Led, x: number, y: number) => boolean) {}
 
   add(
     pos: number,
@@ -120,10 +120,9 @@ export class MarkerSound {
 
   play() {
     for (let i = 0; i < count; i++) {
-      let led = options.isMarkerHorizontal
-        ? leds[markerPos][i]
-        : leds[i][markerPos];
-      if (this.filter(led)) {
+      const x = options.isMarkerHorizontal ? markerPos : i;
+      const y = options.isMarkerHorizontal ? i : markerPos;
+      if (this.filter(leds[x][y], x, y)) {
         if (!this.isPlayings[i]) {
           const s = this.sounds[i];
           if (s != null) {
@@ -138,7 +137,9 @@ export class MarkerSound {
   }
 }
 
-export function addMarkerSound(filter: (l: Led) => boolean) {
+export function addMarkerSound(
+  filter: (l: Led, x: number, y: number) => boolean
+) {
   const ms = new MarkerSound(filter);
   markerSounds.push(ms);
   return ms;

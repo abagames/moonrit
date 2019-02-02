@@ -9,11 +9,19 @@ import { range } from "./math";
 
 function init() {
   matrix.init({ tempo: 300, isMarkerHorizontal: false });
-  const ms = matrix.addMarkerSound(l => l.brightnessIndex >= 2);
+  const ms = matrix.addMarkerSound(
+    (l, x, y) => l.brightnessIndex >= 2 && (_fire == null || y < _fire.pos.y)
+  );
   ms.add(0, "synth_drum", "major pentatonic", "A", 2, 5, 4);
   ms.add(4, "synth_bass_2", "major pentatonic", "A", 2, 1, 8);
   ms.add(12, "melodic_tom", "major pentatonic", "A", 4, 5, 2);
   ms.add(14, "kalimba", "major pentatonic", "A", 3, 5, 2);
+  const fms = matrix.addMarkerSound(
+    (l, x, y) => _fire != null && y >= _fire.pos.y && l.colorIndex === 3
+  );
+  fms.add(0, "timpani", "minor pentatonic", "A", 3, 5, 2);
+  fms.add(2, "synth_choir", "minor pentatonic", "A", 3, 1, 12);
+  fms.add(14, "taiko_drum", "minor pentatonic", "A", 3, 5, 2);
   keyboard.init({ isFourWaysStick: true, isUsingStickKeysAsButton: true });
   sga.setActorClass(Actor);
   initGame();
@@ -35,6 +43,7 @@ const stage: [number, number, number, StageType, number][] = [
 ];
 let spawnings = range(11).map(() => 0);
 let _player;
+let _fire;
 let random = new Random();
 let bgStr: string;
 
@@ -43,17 +52,18 @@ function initGame() {
   bgStr = `gggggggggggggggg
 g--g--g--g--g--g
 ${stage
-    .map(s => {
-      switch (s[3]) {
-        case "log":
-          return "bbbbbbbbbbbbbbbb";
-        case "car":
-          return "----------------";
-        case "bank":
-          return "pppppppppppppppp";
-      }
-    })
-    .join("\n")}pppppppppppppppp
+  .map(s => {
+    switch (s[3]) {
+      case "log":
+        return "bbbbbbbbbbbbbbbb";
+      case "car":
+        return "----------------";
+      case "bank":
+        return "pppppppppppppppp";
+    }
+  })
+  .join("\n")}
+pppppppppppppppp
 pppppppppppppppp
 pppppppppppppppp`;
   _player = sga.spawn(player);
@@ -73,6 +83,7 @@ pppppppppppppppp`;
   for (let i = 0; i < 200; i++) {
     sga.update();
   }
+  _fire = sga.spawn(fire);
 }
 
 function player(a: Actor) {
@@ -117,6 +128,34 @@ function logOrCar(
       if (a.pos.x <= -a.str.length || a.pos.x >= 16) {
         a.remove();
       }
+    }
+    if (_fire != null && a.pos.y >= _fire.pos.y) {
+      a.remove();
+    }
+  });
+}
+
+function fire(a: Actor) {
+  a.str = range(16)
+    .map(() => (random.get() < 0.2 ? "y" : "r"))
+    .join("");
+  a.pos.y = 15;
+  a.addUpdater(() => {
+    if ((a.ticks + 1) % 100 === 0) {
+      const l = `r${a.str.substr(a.str.length - 16)}r`;
+      function getBit(n: number) {
+        return l.charAt(n + 1) === "y" ? 1 : 0;
+      }
+      const rule = "ryyyyrrr";
+      a.str +=
+        "\n" +
+        range(16)
+          .map(i => {
+            const pn = (getBit(i - 1) << 2) | (getBit(i) << 1) | getBit(i + 1);
+            return rule.charAt(pn);
+          })
+          .join("");
+      a.pos.y--;
     }
   });
 }
