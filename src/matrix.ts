@@ -1,9 +1,11 @@
-import { Led, size } from "./led";
+import { Led, size as ledSize } from "./led";
 import * as sound from "./sound";
 import { range } from "./math";
+import { Vector } from "./vector";
 
 export const count = 16;
 export const leds: Led[][] = [];
+export const offset = new Vector();
 const markerLeds: Led[] = [];
 let markerSounds: MarkerSound[];
 let markerPos = count - 1;
@@ -22,18 +24,19 @@ export function init(_options?: {
     return;
   }
   options = { ...options, ..._options };
+  offset.set(ledSize * 1.2);
   for (let x = 0; x < count; x++) {
     const l = [];
     for (let y = 0; y < count; y++) {
       const led = new Led({
-        x: (x + 1.2) * size,
-        y: (y + 1.2) * size
+        x: x * ledSize + offset.x,
+        y: y * ledSize + offset.y
       });
       l.push(led);
     }
     leds.push(l);
-    let mx = (x + 1.2) * size;
-    let my = size * 0.5;
+    let mx = (x + 1.2) * ledSize;
+    let my = ledSize * 0.5;
     let ml: Led;
     if (options.isMarkerHorizontal) {
       ml = new Led({ x: mx, y: my });

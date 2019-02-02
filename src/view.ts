@@ -1,5 +1,6 @@
 export const size = 512;
 export const bloomScale = 8;
+export let canvas: HTMLCanvasElement;
 export let context: CanvasRenderingContext2D;
 export let bloomContext: CanvasRenderingContext2D;
 
@@ -11,7 +12,7 @@ export function init(_initFunc: Function, _updateFunc: Function) {
     _initFunc();
     return;
   }
-  const canvas = document.createElement("canvas");
+  canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
   context = canvas.getContext("2d");
   const bloomCanvas = document.createElement("canvas");

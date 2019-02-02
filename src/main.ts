@@ -1,14 +1,33 @@
 import * as view from "./view";
 import * as matrix from "./matrix";
+import * as led from "./led";
 import * as sga from "./simpleGameActor";
 import { Actor } from "./actor";
 import * as keyboard from "./keyboard";
-import { Random } from "./random";
+import * as pointer from "./pointer";
 import * as sound from "./sound";
-import { range } from "./math";
+import { range, clamp, wrap } from "./math";
+import { Random } from "./random";
+import { Vector } from "./vector";
+
+let _pointer: pointer.Pointer;
 
 function init() {
+  keyboard.init({ isFourWaysStick: true, isUsingStickKeysAsButton: true });
+  pointer.init(sound.resumeAudioContext);
+  _pointer = new pointer.Pointer(
+    view.canvas,
+    new Vector(view.size),
+    false,
+    new Vector(0.5)
+  );
+  sga.setActorClass(Actor);
   matrix.init({ tempo: 300, isMarkerHorizontal: false });
+  initMarkSounds();
+  initGame();
+}
+
+function initMarkSounds() {
   const ms = matrix.addMarkerSound(
     (l, x, y) => l.brightnessIndex >= 2 && (_fire == null || y < _fire.pos.y)
   );
@@ -22,9 +41,6 @@ function init() {
   fms.add(0, "timpani", "minor pentatonic", "A", 3, 5, 2);
   fms.add(2, "synth_choir", "minor pentatonic", "A", 3, 1, 12);
   fms.add(14, "taiko_drum", "minor pentatonic", "A", 3, 5, 2);
-  keyboard.init({ isFourWaysStick: true, isUsingStickKeysAsButton: true });
-  sga.setActorClass(Actor);
-  initGame();
 }
 
 type StageType = "log" | "car" | "bank";
@@ -44,6 +60,7 @@ const stage: [number, number, number, StageType, number][] = [
 let spawnings = range(11).map(() => 0);
 let _player;
 let _fire;
+let _cursor;
 let random = new Random();
 let bgStr: string;
 
@@ -66,7 +83,6 @@ ${stage
 pppppppppppppppp
 pppppppppppppppp
 pppppppppppppppp`;
-  _player = sga.spawn(player);
   sga.addUpdater(u => {
     for (let i = 0; i < 11; i++) {
       const st = stage[i];
@@ -83,20 +99,31 @@ pppppppppppppppp`;
   for (let i = 0; i < 200; i++) {
     sga.update();
   }
-  _fire = sga.spawn(fire);
+  _cursor = sga.spawn(cursor);
+  _player = sga.spawn(player);
+  //_fire = sga.spawn(fire);
 }
 
-function player(a: Actor) {
+function player(a: Actor & { onMove: Function }) {
   const instName = "pad_3_polysynth";
   sound.loadInstrument(instName);
   const notes = sound.getNotes("major pentatonic", "A", 3, 1, 16);
-  a.setPriority(0.5);
+  a.setPriority(0.25);
   a.pos.set(7, 13);
+  const pp = new Vector();
+  a.onMove = (x, y) => {
+    pp.set(a.pos);
+    a.pos.x += x;
+    a.pos.y += y;
+    a.pos.clamp(0, 15, 1, 13);
+    if (matrix.leds[a.pos.x][a.pos.y].colorIndex === 2) {
+      a.pos.set(pp);
+    }
+    matrix.scheduleSound(instName, notes[15 - a.pos.y]);
+  };
   a.addUpdater(() => {
-    // TODO: move with pointer
     if (keyboard.isJustPressed && keyboard.stick.length > 0) {
-      a.pos.add(keyboard.stick);
-      matrix.scheduleSound(instName, notes[15 - a.pos.y]);
+      _cursor.onClick(a.pos.x + keyboard.stick.x, a.pos.y + keyboard.stick.y);
     }
   });
 }
@@ -117,6 +144,7 @@ function logOrCar(
   a.addUpdater(() => {
     if (a.ticks % speed === 0) {
       if (
+        _player != null &&
         type === "log" &&
         _player.pos.y === a.pos.y &&
         a.pos.x <= _player.pos.x &&
@@ -160,9 +188,47 @@ function fire(a: Actor) {
   });
 }
 
+function cursor(a: Actor & { onClick: Function }) {
+  let flashTicks = 0;
+  a.setPriority(0.5);
+  a.onClick = (px, py) => {
+    a.pos.set(px, py);
+    flashTicks = 5;
+    a.str = "w";
+    a.brightness = 3;
+    if (_player != null && _player.pos.distanceTo(a.pos)) {
+      const oa = _player.pos.getAngle(a.pos);
+      const stickAngle = wrap(Math.round(oa / (Math.PI / 2)), 0, 4);
+      _player.onMove([1, 0, -1, 0][stickAngle], [0, 1, 0, -1][stickAngle]);
+    }
+  };
+  a.addUpdater(() => {
+    if (_pointer.isJustPressed) {
+      const px = clamp(
+        Math.floor((_pointer.pos.x - matrix.offset.x) / led.size + 0.5),
+        0,
+        15
+      );
+      const py = clamp(
+        Math.floor((_pointer.pos.y - matrix.offset.y) / led.size + 0.5),
+        0,
+        15
+      );
+      a.onClick(px, py);
+    }
+    flashTicks--;
+    if (flashTicks < 0) {
+      a.str = "";
+      a.brightness = 0;
+    }
+  });
+}
+
 function update() {
-  matrix.print(bgStr, 1, 0, 0);
   keyboard.update();
+  _pointer.update();
+  pointer.resetIsClicked();
+  matrix.print(bgStr, 1, 0, 0);
   sga.update();
   matrix.update();
 }
