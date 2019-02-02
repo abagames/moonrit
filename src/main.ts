@@ -41,10 +41,13 @@ function initMarkSounds() {
   fms.add(0, "timpani", "minor pentatonic", "A", 3, 5, 2);
   fms.add(2, "synth_choir", "minor pentatonic", "A", 3, 1, 12);
   fms.add(14, "taiko_drum", "minor pentatonic", "A", 3, 5, 2);
+  const wms = matrix.addMarkerSound(l => l.colorIndex === 6);
+  wms.add(0, "pad_1_new_age", "major pentatonic", "A", 4, 1, 16);
 }
 
 type StageType = "log" | "car" | "bank";
-const stage: [number, number, number, StageType, number][] = [
+let stage: [number, number, number, StageType, number][];
+const stage1: [number, number, number, StageType, number][] = [
   [3, 1, 27, "log", 1.5],
   [2, -1, 22, "log", 1.1],
   [4, 1, 12, "log", 1],
@@ -57,20 +60,37 @@ const stage: [number, number, number, StageType, number][] = [
   [1, 1, 20, "car", 1],
   [1, -1, 30, "car", 1]
 ];
-let spawnings = range(11).map(() => 0);
+let spawnings: number[];
 let _player;
 let _fire;
 let _cursor;
-let gameUpdater;
 let random = new Random();
 let bgStr: string;
-let difficulty = 1;
-let isReached = false;
+let difficulty: number;
+let isReached: boolean;
+let reachedCount: number;
+let fireAppTicks: number;
+let stageCount = 1;
 
 function initGame() {
+  stageCount = 1;
+  initStage();
+}
+
+function initStage() {
   sga.reset();
+  _cursor = sga.spawn(cursor);
+  _player = sga.spawn(player);
+  if (stageCount === 1) {
+    stage = stage1;
+  } else {
+    randomizeStage();
+  }
+  isReached = false;
+  reachedCount = 0;
+  difficulty = 1;
   bgStr = `gggggggggggggggg
-g--g--g--g--g--g
+ggg--gg--gg--ggg
 ${stage
   .map(s => {
     switch (s[3]) {
@@ -86,7 +106,8 @@ ${stage
 pppppppppppppppp
 pppppppppppppppp
 pppppppppppppppp`;
-  gameUpdater = sga.addUpdater(u => {
+  fireAppTicks = 9999;
+  sga.addUpdater(u => {
     for (let i = 0; i < 11; i++) {
       const st = stage[i];
       if (st[3] === "bank") {
@@ -98,30 +119,75 @@ pppppppppppppppp`;
         spawnings[i] += random.getInt(100, 150) * st[4];
       }
     }
-    if (u.ticks === Math.floor(300 / difficulty)) {
+    if (_fire == null && fireAppTicks < 0) {
       _fire = sga.spawn(fire);
     }
+    fireAppTicks--;
   });
+  spawnings = range(11).map(() => 0);
   for (let i = 0; i < 200; i++) {
     sga.update();
   }
-  _cursor = sga.spawn(cursor);
-  _player = sga.spawn(player);
+  nextPlayer();
+}
+
+function randomizeStage() {
+  stage = [];
+  let type: StageType = random.get() < 0.5 ? "car" : "log";
+  let way = random.getPlusOrMinus();
+  let wayChangingRatio = 0.8;
+  for (let i = 0; i < 11; i++) {
+    let w = 1;
+    let sp = 0;
+    let it = 1;
+    switch (type) {
+      case "car":
+        w = random.get() < 0.2 ? 2 : 1;
+        sp = random.getInt(8, 40);
+        it *= (Math.sqrt(sp / 1.5) / 4) * Math.sqrt(w);
+        break;
+      case "log":
+        w = random.getInt(2, 4);
+        sp = random.get(12, 30);
+        it *= (Math.sqrt(sp / 1.5) / 7) * Math.sqrt(w);
+        break;
+    }
+    stage.push([w, way, sp, type, it]);
+    if (type === "bank") {
+      type = random.get() < 0.5 ? "car" : "log";
+    } else if (random.get() < 0.1) {
+      type = "bank";
+    } else if (random.get() < 0.15) {
+      type = type === "car" ? "log" : "car";
+    }
+    if (random.get() < wayChangingRatio) {
+      way *= -1;
+      wayChangingRatio = 0.8;
+    } else {
+      wayChangingRatio = 1;
+    }
+  }
 }
 
 function onPlayerReached() {
   isReached = true;
+  reachedCount++;
   sga.spawn(water);
 }
 
 function nextPlayer() {
-  gameUpdater.ticks = 0;
   if (_fire != null) {
     _fire.remove();
     _fire = undefined;
   }
+  fireAppTicks = 100 / difficulty;
   isReached = false;
-  difficulty += 0.25;
+  if (reachedCount >= 3) {
+    stageCount++;
+    initStage();
+  } else if (reachedCount >= 1) {
+    difficulty += 0.25 * Math.sqrt(stageCount);
+  }
 }
 
 function player(a: Actor & { onMove: Function }) {
@@ -181,7 +247,7 @@ function logOrCar(
         a.pos.x <= _player.pos.x &&
         _player.pos.x < a.pos.x + a.str.length
       ) {
-        _player.pos.x += way;
+        _player.pos.x = clamp(_player.pos.x + way, 0, 15);
       }
       a.pos.x += way;
       if (a.pos.x <= -a.str.length || a.pos.x >= 16) {
@@ -221,7 +287,7 @@ function fire(a: Actor) {
 function water(a: Actor) {
   a.setPriority(0.1);
   a.str = range(16)
-    .map(() => "c")
+    .map(() => (random.get() < 0.2 ? "c" : "b"))
     .join("");
   a.pos.y = _fire == null ? 15 : _fire.pos.y - 1;
   let my = -1;
@@ -233,14 +299,29 @@ function water(a: Actor) {
         a.str +=
           "\n" +
           range(16)
-            .map(() => "c")
+            .map(() => (random.get() < 0.2 ? "c" : "b"))
             .join("");
         if (a.pos.y === 0) {
           my = 1;
+          if (reachedCount >= 3) {
+            bgStr = range(16)
+              .map(() =>
+                range(16)
+                  .map(() => "-")
+                  .join("")
+              )
+              .join("\n");
+            sga.pool.get(logOrCar).forEach(lc => {
+              lc.remove();
+            });
+            spawnings = range(11).map(() => 9999);
+          }
           _player.pos.set(7, 13);
         }
       } else {
-        _fire.pos.y++;
+        if (_fire != null) {
+          _fire.pos.y++;
+        }
         if (a.pos.y > 15) {
           nextPlayer();
           a.remove();
