@@ -9,6 +9,8 @@ export class Actor extends sga.Actor {
 
   update() {
     super.update();
-    matrix.print(this.str, this.brightness, this.pos.x, this.pos.y);
+    if (this.isAlive) {
+      matrix.print(this.str, this.brightness, this.pos.x, this.pos.y);
+    }
   }
 }

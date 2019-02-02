@@ -48,11 +48,11 @@ function initMarkSounds() {
 type StageType = "log" | "car" | "bank";
 let stage: [number, number, number, StageType, number][];
 const stage1: [number, number, number, StageType, number][] = [
-  [3, 1, 27, "log", 1.5],
-  [2, -1, 22, "log", 1.1],
-  [4, 1, 12, "log", 1],
-  [3, 1, 30, "log", 1.4],
-  [3, -1, 20, "log", 1.1],
+  [4, 1, 27, "log", 1.5],
+  [3, -1, 22, "log", 1.1],
+  [5, 1, 12, "log", 1],
+  [4, 1, 30, "log", 1.4],
+  [4, -1, 20, "log", 1.1],
   [0, 0, 0, "bank", 0],
   [2, -1, 40, "car", 1.5],
   [1, 1, 8, "car", 1],
@@ -80,7 +80,6 @@ function initGame() {
 function initStage() {
   sga.reset();
   _cursor = sga.spawn(cursor);
-  _player = sga.spawn(player);
   if (stageCount === 1) {
     stage = stage1;
   } else {
@@ -128,7 +127,7 @@ pppppppppppppppp`;
   for (let i = 0; i < 200; i++) {
     sga.update();
   }
-  nextPlayer();
+  resetPlayer();
 }
 
 function randomizeStage() {
@@ -147,7 +146,7 @@ function randomizeStage() {
         it *= (Math.sqrt(sp / 1.5) / 4) * Math.sqrt(w);
         break;
       case "log":
-        w = random.getInt(2, 4);
+        w = random.getInt(3, 5);
         sp = random.get(12, 30);
         it *= (Math.sqrt(sp / 1.5) / 7) * Math.sqrt(w);
         break;
@@ -176,18 +175,24 @@ function onPlayerReached() {
 }
 
 function nextPlayer() {
+  resetPlayer();
+  if (reachedCount >= 3) {
+    stageCount++;
+    initStage();
+  } else {
+    difficulty += 0.25 * Math.sqrt(stageCount);
+  }
+}
+
+function resetPlayer() {
   if (_fire != null) {
     _fire.remove();
     _fire = undefined;
   }
   fireAppTicks = 100 / difficulty;
   isReached = false;
-  if (reachedCount >= 3) {
-    stageCount++;
-    initStage();
-  } else if (reachedCount >= 1) {
-    difficulty += 0.25 * Math.sqrt(stageCount);
-  }
+  _player = sga.spawn(player);
+  _player.pos.set(7, 13);
 }
 
 function player(a: Actor & { onMove: Function }) {
@@ -220,6 +225,35 @@ function player(a: Actor & { onMove: Function }) {
   a.addUpdater(() => {
     if (keyboard.isJustPressed && keyboard.stick.length > 0) {
       _cursor.onClick(a.pos.x + keyboard.stick.x, a.pos.y + keyboard.stick.y);
+    }
+    const l = matrix.leds[a.pos.x][a.pos.y];
+    if (
+      (_fire != null && a.pos.y >= _fire.pos.y) ||
+      l.colorIndex === 1 ||
+      l.colorIndex === 4
+    ) {
+      sga.spawn(playerOut);
+      a.remove();
+      _player = undefined;
+    }
+  });
+}
+
+function playerOut(a: Actor) {
+  const instName = "lead_6_voice";
+  sound.loadInstrument(instName);
+  const notes = sound.getNotes("minor pentatonic", "A", 2, 1, 16);
+  a.setPriority(0.25);
+  a.str = "w w\n w\nw w";
+  a.pos.set(_player.pos.x - 1, _player.pos.y - 1);
+  a.addUpdater(() => {
+    a.brightness = 3 - Math.floor(a.ticks / 8);
+    if (a.ticks % 3 === 0) {
+      matrix.scheduleSound(instName, notes[15 - a.ticks / 3]);
+    }
+    if (a.brightness < 0) {
+      a.remove();
+      resetPlayer();
     }
   });
 }
@@ -316,7 +350,8 @@ function water(a: Actor) {
             });
             spawnings = range(11).map(() => 9999);
           }
-          _player.pos.set(7, 13);
+          _player.remove();
+          _player = undefined;
         }
       } else {
         if (_fire != null) {
