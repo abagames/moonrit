@@ -9,6 +9,7 @@ import * as sound from "./sound";
 import { range, clamp, wrap } from "./math";
 import { Random } from "./random";
 import { Vector } from "./vector";
+import * as text from "./text";
 
 let _pointer: pointer.Pointer;
 
@@ -21,6 +22,7 @@ function init() {
     false,
     new Vector(0.5)
   );
+  text.init();
   sga.setActorClass(Actor);
   matrix.init({ tempo: 300, isMarkerHorizontal: false });
   initMarkSounds();
@@ -70,16 +72,21 @@ let difficulty: number;
 let isReached: boolean;
 let reachedCount: number;
 let fireAppTicks: number;
-let stageCount = 1;
+let stageCount: number;
+let score: number;
+let scoreText;
 
 function initGame() {
   stageCount = 1;
+  score = 0;
   initStage();
 }
 
 function initStage() {
   sga.reset();
   _cursor = sga.spawn(cursor);
+  scoreText = sga.spawn(text.text);
+  scoreText.pos.y = 10;
   if (stageCount === 1) {
     stage = stage1;
   } else {
@@ -192,7 +199,6 @@ function resetPlayer() {
   fireAppTicks = 100 / difficulty;
   isReached = false;
   _player = sga.spawn(player);
-  _player.pos.set(7, 13);
 }
 
 function player(a: Actor & { onMove: Function }) {
@@ -325,6 +331,9 @@ function water(a: Actor) {
     .join("");
   a.pos.y = _fire == null ? 15 : _fire.pos.y - 1;
   let my = -1;
+  const addScoreText = sga.spawn(text.text);
+  addScoreText.pos.y = 1;
+  let addingScore = 0;
   a.addUpdater(() => {
     if (a.ticks >= 4 / difficulty) {
       a.ticks -= 4 / difficulty;
@@ -353,6 +362,10 @@ function water(a: Actor) {
           _player.remove();
           _player = undefined;
         }
+        addingScore += reachedCount;
+        score += reachedCount;
+        addScoreText.setText(`+${addingScore}`);
+        drawScore();
       } else {
         if (_fire != null) {
           _fire.pos.y++;
@@ -360,6 +373,8 @@ function water(a: Actor) {
         if (a.pos.y > 15) {
           nextPlayer();
           a.remove();
+          addScoreText.remove();
+          hideScore();
         }
       }
     }
@@ -400,6 +415,14 @@ function cursor(a: Actor & { onClick: Function }) {
       a.brightness = 0;
     }
   });
+}
+
+function drawScore() {
+  scoreText.setText(`${score}`);
+}
+
+function hideScore() {
+  scoreText.setText("");
 }
 
 function update() {
