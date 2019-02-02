@@ -36,11 +36,15 @@ export function fillRect(
   brightness: number
 ) {
   const b = Math.sqrt(brightness);
-  context.fillStyle = `rgb(${color.r * b},${color.g * b},${color.b * b})`;
+  context.fillStyle = `rgb(${Math.floor(color.r * b)},${Math.floor(
+    color.g * b
+  )},${Math.floor(color.b * b)})`;
   context.fillRect(x - width / 2, y - width / 2, width, height);
-  bloomContext.fillStyle = `rgb(${color.r * brightness * bloomRatio},${color.g *
-    brightness *
-    bloomRatio},${color.b * brightness * bloomRatio})`;
+  bloomContext.fillStyle = `rgb(${Math.floor(
+    color.r * brightness * bloomRatio
+  )},${Math.floor(color.g * brightness * bloomRatio)},${Math.floor(
+    color.b * brightness * bloomRatio
+  )})`;
   const w = width * brightness;
   const h = height * brightness;
   bloomContext.fillRect(
