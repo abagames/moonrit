@@ -61,8 +61,11 @@ let spawnings = range(11).map(() => 0);
 let _player;
 let _fire;
 let _cursor;
+let gameUpdater;
 let random = new Random();
 let bgStr: string;
+let difficulty = 1;
+let isReached = false;
 
 function initGame() {
   sga.reset();
@@ -83,17 +86,20 @@ ${stage
 pppppppppppppppp
 pppppppppppppppp
 pppppppppppppppp`;
-  sga.addUpdater(u => {
+  gameUpdater = sga.addUpdater(u => {
     for (let i = 0; i < 11; i++) {
       const st = stage[i];
       if (st[3] === "bank") {
         continue;
       }
-      spawnings[i]--;
+      spawnings[i] -= difficulty;
       if (spawnings[i] < 0) {
         sga.spawn(logOrCar, i + 2, st[0], st[1], st[2], st[3]);
-        spawnings[i] = random.getInt(100, 150) * st[4];
+        spawnings[i] += random.getInt(100, 150) * st[4];
       }
+    }
+    if (u.ticks === Math.floor(300 / difficulty)) {
+      _fire = sga.spawn(fire);
     }
   });
   for (let i = 0; i < 200; i++) {
@@ -101,7 +107,21 @@ pppppppppppppppp`;
   }
   _cursor = sga.spawn(cursor);
   _player = sga.spawn(player);
-  //_fire = sga.spawn(fire);
+}
+
+function onPlayerReached() {
+  isReached = true;
+  sga.spawn(water);
+}
+
+function nextPlayer() {
+  gameUpdater.ticks = 0;
+  if (_fire != null) {
+    _fire.remove();
+    _fire = undefined;
+  }
+  isReached = false;
+  difficulty += 0.25;
 }
 
 function player(a: Actor & { onMove: Function }) {
@@ -112,12 +132,22 @@ function player(a: Actor & { onMove: Function }) {
   a.pos.set(7, 13);
   const pp = new Vector();
   a.onMove = (x, y) => {
+    if (isReached) {
+      return;
+    }
     pp.set(a.pos);
     a.pos.x += x;
     a.pos.y += y;
     a.pos.clamp(0, 15, 1, 13);
     if (matrix.leds[a.pos.x][a.pos.y].colorIndex === 2) {
       a.pos.set(pp);
+    }
+    if (a.pos.y === 1) {
+      const nextBgStr = `${bgStr.substr(0, 17 + a.pos.x - 1)}ggg${bgStr.substr(
+        17 + a.pos.x + 2
+      )}`;
+      bgStr = nextBgStr;
+      onPlayerReached();
     }
     matrix.scheduleSound(instName, notes[15 - a.pos.y]);
   };
@@ -142,7 +172,8 @@ function logOrCar(
     .join("");
   a.pos.set(way > 0 ? -a.str.length : 16, y);
   a.addUpdater(() => {
-    if (a.ticks % speed === 0) {
+    if (a.ticks >= speed / difficulty) {
+      a.ticks -= speed / difficulty;
       if (
         _player != null &&
         type === "log" &&
@@ -157,19 +188,18 @@ function logOrCar(
         a.remove();
       }
     }
-    if (_fire != null && a.pos.y >= _fire.pos.y) {
-      a.remove();
-    }
   });
 }
 
 function fire(a: Actor) {
+  a.setPriority(0.2);
   a.str = range(16)
     .map(() => (random.get() < 0.2 ? "y" : "r"))
     .join("");
   a.pos.y = 15;
   a.addUpdater(() => {
-    if ((a.ticks + 1) % 100 === 0) {
+    if (!isReached && a.ticks >= 100 / difficulty) {
+      a.ticks -= 100 / difficulty;
       const l = `r${a.str.substr(a.str.length - 16)}r`;
       function getBit(n: number) {
         return l.charAt(n + 1) === "y" ? 1 : 0;
@@ -184,6 +214,38 @@ function fire(a: Actor) {
           })
           .join("");
       a.pos.y--;
+    }
+  });
+}
+
+function water(a: Actor) {
+  a.setPriority(0.1);
+  a.str = range(16)
+    .map(() => "c")
+    .join("");
+  a.pos.y = _fire == null ? 15 : _fire.pos.y - 1;
+  let my = -1;
+  a.addUpdater(() => {
+    if (a.ticks >= 4 / difficulty) {
+      a.ticks -= 4 / difficulty;
+      a.pos.y += my;
+      if (my < 0) {
+        a.str +=
+          "\n" +
+          range(16)
+            .map(() => "c")
+            .join("");
+        if (a.pos.y === 0) {
+          my = 1;
+          _player.pos.set(7, 13);
+        }
+      } else {
+        _fire.pos.y++;
+        if (a.pos.y > 15) {
+          nextPlayer();
+          a.remove();
+        }
+      }
     }
   });
 }
