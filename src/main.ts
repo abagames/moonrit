@@ -26,7 +26,7 @@ function init() {
   sga.setActorClass(Actor);
   matrix.init({ tempo: 300, isMarkerHorizontal: false });
   initMarkSounds();
-  initGame();
+  initTitle();
 }
 
 function initMarkSounds() {
@@ -75,11 +75,17 @@ let fireAppTicks: number;
 let stageCount: number;
 let score: number;
 let scoreText;
+let leftPlayerCount: number;
+let gameOverTicks: number;
 
 function initGame() {
   stageCount = 1;
   score = 0;
+  leftPlayerCount = 2;
+  gameOverTicks = -1;
   initStage();
+  keyboard.clearJustPressed();
+  _pointer.clearJustPressed();
 }
 
 function initStage() {
@@ -91,6 +97,9 @@ function initStage() {
     stage = stage1;
   } else {
     randomizeStage();
+  }
+  if (leftPlayerCount < 2) {
+    leftPlayerCount++;
   }
   isReached = false;
   reachedCount = 0;
@@ -134,7 +143,9 @@ pppppppppppppppp`;
   for (let i = 0; i < 200; i++) {
     sga.update();
   }
-  resetPlayer();
+  if (gameOverTicks < 0) {
+    resetPlayer();
+  }
 }
 
 function randomizeStage() {
@@ -199,6 +210,10 @@ function resetPlayer() {
   fireAppTicks = 100 / difficulty;
   isReached = false;
   _player = sga.spawn(player);
+  for (let i = 0; i < leftPlayerCount; i++) {
+    const lp = sga.spawn(leftPlayer);
+    lp.pos.set(9 + i * 2, 13);
+  }
 }
 
 function player(a: Actor & { onMove: Function }) {
@@ -245,6 +260,14 @@ function player(a: Actor & { onMove: Function }) {
   });
 }
 
+function leftPlayer(a: Actor) {
+  a.addUpdater(() => {
+    if (a.ticks > 120) {
+      a.remove();
+    }
+  });
+}
+
 function playerOut(a: Actor) {
   const instName = "lead_6_voice";
   sound.loadInstrument(instName);
@@ -259,7 +282,15 @@ function playerOut(a: Actor) {
     }
     if (a.brightness < 0) {
       a.remove();
-      resetPlayer();
+      sga.pool.get(leftPlayer).forEach(lp => {
+        lp.remove();
+      });
+      leftPlayerCount--;
+      if (leftPlayerCount < 0) {
+        initGameOver();
+      } else {
+        resetPlayer();
+      }
     }
   });
 }
@@ -293,6 +324,9 @@ function logOrCar(
       if (a.pos.x <= -a.str.length || a.pos.x >= 16) {
         a.remove();
       }
+    }
+    if (gameOverTicks >= 0) {
+      a.brightness = 1;
     }
   });
 }
@@ -425,11 +459,59 @@ function hideScore() {
   scoreText.setText("");
 }
 
+let gameOverText;
+
+function initGameOver() {
+  drawScore();
+  if (_fire != null) {
+    _fire.remove();
+    _fire = undefined;
+  }
+  initGameOverOrTitle();
+  gameOverTicks = 0;
+}
+
+function initTitle() {
+  stageCount = 1;
+  gameOverTicks = -1;
+  initStage();
+  initGameOverOrTitle();
+  gameOverTicks = 240;
+}
+
+function initGameOverOrTitle() {
+  gameOverText = sga.spawn(text.text);
+  gameOverText.pos.y = 1;
+  fireAppTicks = 9999999;
+  keyboard.clearJustPressed();
+  _pointer.clearJustPressed();
+}
+
+function handleGameOver() {
+  if (gameOverTicks >= 240) {
+    if (gameOverTicks === 240) {
+      gameOverText.setText("XRO");
+    }
+  } else if (gameOverTicks % 60 === 0) {
+    gameOverText.setText((gameOverTicks / 60) % 2 === 0 ? "GAME" : "OVER");
+  }
+  gameOverTicks++;
+  if (
+    gameOverTicks > 30 &&
+    (keyboard.isJustPressed || _pointer.isJustPressed)
+  ) {
+    initGame();
+  }
+}
+
 function update() {
   keyboard.update();
   _pointer.update();
   pointer.resetIsClicked();
   matrix.print(bgStr, 1, 0, 0);
+  if (gameOverTicks >= 0) {
+    handleGameOver();
+  }
   sga.update();
   matrix.update();
 }
