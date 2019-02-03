@@ -6,6 +6,8 @@
 
 [XRD](https://abagames.github.io/moonrit/)
 
+[![XRD screenshot](https://abagames.github.io/moonrit/screenshots/xrd.gif)](https://abagames.github.io/moonrit/)
+
 ## Acknowledgement
 
 ### Library
