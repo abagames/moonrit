@@ -6,8 +6,16 @@ const win: any = window;
 const AudioContext = win.AudioContext || win.webkitAudioContext;
 export const audioContext = new AudioContext();
 let instruments: { [s: string]: any } = {};
+let isEnabled = true;
 
 export function loadInstrument(name: string) {
+  if (!isEnabled) {
+    return;
+  }
+  if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+    isEnabled = false;
+    return;
+  }
   if (instruments[name] != null) {
     return;
   }
@@ -45,7 +53,7 @@ export function play(
   duration = 0.2,
   gain = 1
 ) {
-  if (audioContext == null || audioContext.state !== "running") {
+  if (audioContext == null || audioContext.state !== "running" || !isEnabled) {
     return;
   }
   const inst = instruments[instrumentName];
