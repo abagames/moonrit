@@ -197,9 +197,8 @@ function nextPlayer() {
   if (reachedCount >= 3) {
     stageCount++;
     initStage();
-  } else {
-    difficulty += 0.25 * Math.sqrt(stageCount);
   }
+  difficulty += 0.2 * Math.sqrt(stageCount);
 }
 
 function resetPlayer() {
@@ -399,7 +398,7 @@ function water(a: Actor) {
         addingScore += reachedCount;
         score += reachedCount;
         addScoreText.setText(`+${addingScore}`);
-        drawScore();
+        showScore();
       } else {
         if (_fire != null) {
           _fire.pos.y++;
@@ -451,7 +450,7 @@ function cursor(a: Actor & { onClick: Function }) {
   });
 }
 
-function drawScore() {
+function showScore() {
   scoreText.setText(`${score}`);
 }
 
@@ -462,21 +461,20 @@ function hideScore() {
 let gameOverText;
 
 function initGameOver() {
-  drawScore();
+  gameOverTicks = 0;
+  showScore();
   if (_fire != null) {
     _fire.remove();
     _fire = undefined;
   }
   initGameOverOrTitle();
-  gameOverTicks = 0;
 }
 
 function initTitle() {
+  gameOverTicks = 240;
   stageCount = 1;
-  gameOverTicks = -1;
   initStage();
   initGameOverOrTitle();
-  gameOverTicks = 240;
 }
 
 function initGameOverOrTitle() {
@@ -487,10 +485,10 @@ function initGameOverOrTitle() {
   _pointer.clearJustPressed();
 }
 
-function handleGameOver() {
+function updateGameOver() {
   if (gameOverTicks >= 240) {
     if (gameOverTicks === 240) {
-      gameOverText.setText("XRO");
+      gameOverText.setText("XRD");
     }
   } else if (gameOverTicks % 60 === 0) {
     gameOverText.setText((gameOverTicks / 60) % 2 === 0 ? "GAME" : "OVER");
@@ -510,7 +508,7 @@ function update() {
   pointer.resetIsClicked();
   matrix.print(bgStr, 1, 0, 0);
   if (gameOverTicks >= 0) {
-    handleGameOver();
+    updateGameOver();
   }
   sga.update();
   matrix.update();
