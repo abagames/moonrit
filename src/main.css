@@ -9,7 +9,7 @@ body {
   color: white;
 }
 
-canvas {
+canvas.centering {
   position: absolute;
   left: 50%;
   top: 50%;

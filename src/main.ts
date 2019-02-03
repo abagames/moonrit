@@ -77,6 +77,7 @@ let score: number;
 let scoreText;
 let leftPlayerCount: number;
 let gameOverTicks: number;
+let gameOverText;
 
 function initGame() {
   stageCount = 1;
@@ -457,8 +458,6 @@ function showScore() {
 function hideScore() {
   scoreText.setText("");
 }
-
-let gameOverText;
 
 function initGameOver() {
   gameOverTicks = 0;

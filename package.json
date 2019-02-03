@@ -13,6 +13,7 @@
     "typescript": "^3.2.4"
   },
   "dependencies": {
+    "gif-capture-canvas": "^1.0.1",
     "soundfont-player": "^0.11.0",
     "tonal": "^2.1.2"
   }

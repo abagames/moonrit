@@ -1,26 +1,46 @@
+import * as gcc from "gif-capture-canvas";
+
 export const size = 512;
 export const bloomScale = 8;
 export let canvas: HTMLCanvasElement;
 export let context: CanvasRenderingContext2D;
+export let bloomCanvas: HTMLCanvasElement;
 export let bloomContext: CanvasRenderingContext2D;
 
 let updateFunc: Function;
+let capturingCanvas: HTMLCanvasElement;
+let capturingContext: CanvasRenderingContext2D;
+let isCapturing: boolean;
 
-export function init(_initFunc: Function, _updateFunc: Function) {
+export function init(
+  _initFunc: Function,
+  _updateFunc: Function,
+  _isCapturing = false
+) {
   updateFunc = _updateFunc;
   if (context != null) {
     _initFunc();
     return;
   }
   canvas = document.createElement("canvas");
+  canvas.classList.add("centering");
   canvas.width = canvas.height = size;
   context = canvas.getContext("2d");
-  const bloomCanvas = document.createElement("canvas");
+  bloomCanvas = document.createElement("canvas");
+  bloomCanvas.classList.add("centering");
   bloomCanvas.width = bloomCanvas.height = size / bloomScale;
   bloomCanvas.style.opacity = "0.7";
   bloomContext = bloomCanvas.getContext("2d");
   document.body.appendChild(canvas);
   document.body.appendChild(bloomCanvas);
+  isCapturing = _isCapturing;
+  if (isCapturing) {
+    gcc.setOptions({ scale: 1, capturingFps: 60 });
+    capturingCanvas = document.createElement("canvas");
+    capturingCanvas.width = size;
+    capturingCanvas.height = size / 2;
+    capturingContext = capturingCanvas.getContext("2d");
+  }
   _initFunc();
   update();
 }
@@ -61,8 +81,19 @@ function clear() {
   bloomContext.clearRect(0, 0, size / bloomScale, size / bloomScale);
 }
 
+function capture() {
+  capturingContext.fillStyle = "black";
+  capturingContext.fillRect(0, 0, size, size / 2);
+  capturingContext.drawImage(canvas, size / 4, 0, size / 2, size / 2);
+  capturingContext.drawImage(bloomCanvas, size / 4, 0, size / 2, size / 2);
+  gcc.capture(capturingCanvas);
+}
+
 function update() {
   requestAnimationFrame(update);
   clear();
   updateFunc();
+  if (isCapturing) {
+    capture();
+  }
 }
