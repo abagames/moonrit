@@ -1,6 +1,7 @@
 import * as view from "./view";
 import * as matrix from "./matrix";
 import * as led from "./led";
+import * as text from "./text";
 import * as sga from "./simpleGameActor";
 import { Actor } from "./actor";
 import * as keyboard from "./keyboard";
@@ -8,7 +9,6 @@ import * as pointer from "./pointer";
 import * as sound from "./sound";
 import { clamp } from "./math";
 import { Vector } from "./vector";
-import * as text from "./text";
 
 type Scene = "title" | "game" | "gameOver";
 export let scene: Scene;
@@ -18,6 +18,7 @@ let _pointer: pointer.Pointer;
 let options = {
   matrixOptions: { tempo: 300, isMarkerHorizontal: false },
   title: "",
+  description: "",
   onInitialize: () => {},
   onStartingTitle: () => {},
   onStartingGame: () => {},
@@ -28,6 +29,7 @@ let score: number;
 let scoreText;
 let gameOverTicks: number;
 let gameOverText;
+let descriptionTicks = 300;
 
 export function init(_options?) {
   options = { ...options, ..._options };
@@ -48,6 +50,7 @@ function initFirst() {
   matrix.init(options.matrixOptions);
   options.onInitialize();
   startTitle();
+  text.drawDescription(options.description);
 }
 
 function update() {
@@ -57,6 +60,12 @@ function update() {
   matrix.print(bgStr, 1, 0, 0);
   if (gameOverTicks >= 0) {
     updateGameOver();
+  }
+  if (scene === "game" && descriptionTicks > 0) {
+    descriptionTicks--;
+    if (descriptionTicks === 0) {
+      text.drawDescription("");
+    }
   }
   sga.update();
   matrix.update();

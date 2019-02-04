@@ -6,6 +6,8 @@ export let canvas: HTMLCanvasElement;
 export let context: CanvasRenderingContext2D;
 export let bloomCanvas: HTMLCanvasElement;
 export let bloomContext: CanvasRenderingContext2D;
+export let descriptionCanvas: HTMLCanvasElement;
+export let descriptionContext: CanvasRenderingContext2D;
 
 let updateFunc: Function;
 let capturingCanvas: HTMLCanvasElement;
@@ -31,8 +33,14 @@ export function init(
   bloomCanvas.width = bloomCanvas.height = size / bloomScale;
   bloomCanvas.style.opacity = "0.7";
   bloomContext = bloomCanvas.getContext("2d");
+  descriptionCanvas = document.createElement("canvas");
+  descriptionCanvas.classList.add("topCenter");
+  descriptionCanvas.width = 256;
+  descriptionCanvas.height = 27;
+  descriptionContext = descriptionCanvas.getContext("2d");
   document.body.appendChild(canvas);
   document.body.appendChild(bloomCanvas);
+  document.body.appendChild(descriptionCanvas);
   isCapturing = _isCapturing;
   if (isCapturing) {
     gcc.setOptions({ scale: 1, capturingFps: 60 });

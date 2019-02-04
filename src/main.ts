@@ -1,4 +1,6 @@
+import * as game from "./game";
 import * as matrix from "./matrix";
+import * as text from "./text";
 import * as sga from "./simpleGameActor";
 import { Actor } from "./actor";
 import * as keyboard from "./keyboard";
@@ -6,8 +8,6 @@ import * as sound from "./sound";
 import { range, clamp, wrap } from "./math";
 import { Random } from "./random";
 import { Vector } from "./vector";
-import * as text from "./text";
-import * as game from "./game";
 
 function onInitialize() {
   initMarkSounds();
@@ -416,6 +416,7 @@ function onClickCursor(pos) {
 
 game.init({
   title: "XRD",
+  description: "[uldr][WASD] KEY: MOVE\nCROSS A ROAD AND WALK ACROSS A LOG.",
   onInitialize,
   onStartingGame,
   onStartingGameOver,

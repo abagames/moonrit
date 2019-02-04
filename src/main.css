@@ -17,3 +17,13 @@ canvas.centering {
   width: 95vmin;
   height: 95vmin;
 }
+
+canvas.topCenter {
+  position: relative;
+  padding: 0;
+  margin: auto;
+  display: block;
+  width: 95vmin;
+  height: 10vmin;
+  z-index: 1;
+}

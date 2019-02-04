@@ -1,7 +1,7 @@
 import * as view from "./view";
 
 export const size = view.size / 17;
-const colors = [
+export const colors = [
   0x000000,
   0xe91e63,
   0x4caf50,
