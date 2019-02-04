@@ -1,32 +1,16 @@
-import * as view from "./view";
 import * as matrix from "./matrix";
-import * as led from "./led";
 import * as sga from "./simpleGameActor";
 import { Actor } from "./actor";
 import * as keyboard from "./keyboard";
-import * as pointer from "./pointer";
 import * as sound from "./sound";
 import { range, clamp, wrap } from "./math";
 import { Random } from "./random";
 import { Vector } from "./vector";
 import * as text from "./text";
+import * as game from "./game";
 
-let _pointer: pointer.Pointer;
-
-function init() {
-  keyboard.init({ isFourWaysStick: true, isUsingStickKeysAsButton: true });
-  pointer.init(sound.resumeAudioContext);
-  _pointer = new pointer.Pointer(
-    view.canvas,
-    new Vector(view.size),
-    false,
-    new Vector(0.5)
-  );
-  text.init();
-  sga.setActorClass(Actor);
-  matrix.init({ tempo: 300, isMarkerHorizontal: false });
+function onInitialize() {
   initMarkSounds();
-  initTitle();
 }
 
 function initMarkSounds() {
@@ -65,35 +49,22 @@ const stage1: [number, number, number, StageType, number][] = [
 let spawnings: number[];
 let _player;
 let _fire;
-let _cursor;
 let random = new Random();
-let bgStr: string;
 let difficulty: number;
 let isReached: boolean;
 let reachedCount: number;
 let fireAppTicks: number;
 let stageCount: number;
-let score: number;
-let scoreText;
 let leftPlayerCount: number;
-let gameOverTicks: number;
-let gameOverText;
 
-function initGame() {
+function onStartingGame() {
   stageCount = 1;
-  score = 0;
   leftPlayerCount = 2;
-  gameOverTicks = -1;
   initStage();
-  keyboard.clearJustPressed();
-  _pointer.clearJustPressed();
 }
 
 function initStage() {
-  sga.reset();
-  _cursor = sga.spawn(cursor);
-  scoreText = sga.spawn(text.text);
-  scoreText.pos.y = 10;
+  game.reset();
   if (stageCount === 1) {
     stage = stage1;
   } else {
@@ -105,7 +76,7 @@ function initStage() {
   isReached = false;
   reachedCount = 0;
   difficulty = 1;
-  bgStr = `gggggggggggggggg
+  game.setBgStr(`gggggggggggggggg
 ggg--gg--gg--ggg
 ${stage
   .map(s => {
@@ -121,7 +92,7 @@ ${stage
   .join("\n")}
 pppppppppppppppp
 pppppppppppppppp
-pppppppppppppppp`;
+pppppppppppppppp`);
   fireAppTicks = 9999;
   sga.addUpdater(u => {
     for (let i = 0; i < 11; i++) {
@@ -144,7 +115,7 @@ pppppppppppppppp`;
   for (let i = 0; i < 200; i++) {
     sga.update();
   }
-  if (gameOverTicks < 0) {
+  if (game.scene === "game") {
     resetPlayer();
   }
 }
@@ -235,17 +206,21 @@ function player(a: Actor & { onMove: Function }) {
       a.pos.set(pp);
     }
     if (a.pos.y === 1) {
-      const nextBgStr = `${bgStr.substr(0, 17 + a.pos.x - 1)}ggg${bgStr.substr(
-        17 + a.pos.x + 2
-      )}`;
-      bgStr = nextBgStr;
+      const nextBgStr = `${game.bgStr.substr(
+        0,
+        17 + a.pos.x - 1
+      )}ggg${game.bgStr.substr(17 + a.pos.x + 2)}`;
+      game.setBgStr(nextBgStr);
       onPlayerReached();
     }
     matrix.scheduleSound(instName, notes[15 - a.pos.y]);
   };
   a.addUpdater(() => {
     if (keyboard.isJustPressed && keyboard.stick.length > 0) {
-      _cursor.onClick(a.pos.x + keyboard.stick.x, a.pos.y + keyboard.stick.y);
+      game._cursor.onClick(
+        a.pos.x + keyboard.stick.x,
+        a.pos.y + keyboard.stick.y
+      );
     }
     const l = matrix.leds[a.pos.x][a.pos.y];
     if (
@@ -287,7 +262,7 @@ function playerOut(a: Actor) {
       });
       leftPlayerCount--;
       if (leftPlayerCount < 0) {
-        initGameOver();
+        game.startGameOver();
       } else {
         resetPlayer();
       }
@@ -325,7 +300,7 @@ function logOrCar(
         a.remove();
       }
     }
-    if (gameOverTicks >= 0) {
+    if (game.scene !== "game") {
       a.brightness = 1;
     }
   });
@@ -381,13 +356,15 @@ function water(a: Actor) {
         if (a.pos.y === 0) {
           my = 1;
           if (reachedCount >= 3) {
-            bgStr = range(16)
-              .map(() =>
-                range(16)
-                  .map(() => "-")
-                  .join("")
-              )
-              .join("\n");
+            game.setBgStr(
+              range(16)
+                .map(() =>
+                  range(16)
+                    .map(() => "-")
+                    .join("")
+                )
+                .join("\n")
+            );
             sga.pool.get(logOrCar).forEach(lc => {
               lc.remove();
             });
@@ -397,9 +374,9 @@ function water(a: Actor) {
           _player = undefined;
         }
         addingScore += reachedCount;
-        score += reachedCount;
+        game.addScore(reachedCount);
         addScoreText.setText(`+${addingScore}`);
-        showScore();
+        game.showScore();
       } else {
         if (_fire != null) {
           _fire.pos.y++;
@@ -408,109 +385,40 @@ function water(a: Actor) {
           nextPlayer();
           a.remove();
           addScoreText.remove();
-          hideScore();
+          game.hideScore();
         }
       }
     }
   });
 }
 
-function cursor(a: Actor & { onClick: Function }) {
-  let flashTicks = 0;
-  a.setPriority(0.5);
-  a.onClick = (px, py) => {
-    a.pos.set(px, py);
-    flashTicks = 5;
-    a.str = "w";
-    a.brightness = 3;
-    if (_player != null && _player.pos.distanceTo(a.pos)) {
-      const oa = _player.pos.getAngle(a.pos);
-      const stickAngle = wrap(Math.round(oa / (Math.PI / 2)), 0, 4);
-      _player.onMove([1, 0, -1, 0][stickAngle], [0, 1, 0, -1][stickAngle]);
-    }
-  };
-  a.addUpdater(() => {
-    if (_pointer.isJustPressed) {
-      const px = clamp(
-        Math.floor((_pointer.pos.x - matrix.offset.x) / led.size + 0.5),
-        0,
-        15
-      );
-      const py = clamp(
-        Math.floor((_pointer.pos.y - matrix.offset.y) / led.size + 0.5),
-        0,
-        15
-      );
-      a.onClick(px, py);
-    }
-    flashTicks--;
-    if (flashTicks < 0) {
-      a.str = "";
-      a.brightness = 0;
-    }
-  });
-}
-
-function showScore() {
-  scoreText.setText(`${score}`);
-}
-
-function hideScore() {
-  scoreText.setText("");
-}
-
-function initGameOver() {
-  gameOverTicks = 0;
-  showScore();
+function onStartingGameOver() {
   if (_fire != null) {
     _fire.remove();
     _fire = undefined;
   }
-  initGameOverOrTitle();
-}
-
-function initTitle() {
-  gameOverTicks = 240;
-  stageCount = 1;
-  initStage();
-  initGameOverOrTitle();
-}
-
-function initGameOverOrTitle() {
-  gameOverText = sga.spawn(text.text);
-  gameOverText.pos.y = 1;
   fireAppTicks = 9999999;
-  keyboard.clearJustPressed();
-  _pointer.clearJustPressed();
 }
 
-function updateGameOver() {
-  if (gameOverTicks >= 240) {
-    if (gameOverTicks === 240) {
-      gameOverText.setText("XRD");
-    }
-  } else if (gameOverTicks % 60 === 0) {
-    gameOverText.setText((gameOverTicks / 60) % 2 === 0 ? "GAME" : "OVER");
-  }
-  gameOverTicks++;
-  if (
-    gameOverTicks > 30 &&
-    (keyboard.isJustPressed || _pointer.isJustPressed)
-  ) {
-    initGame();
+function onStartingTitle() {
+  stageCount = 1;
+  fireAppTicks = 9999999;
+  initStage();
+}
+
+function onClickCursor(pos) {
+  if (_player != null && _player.pos.distanceTo(pos)) {
+    const oa = _player.pos.getAngle(pos);
+    const stickAngle = wrap(Math.round(oa / (Math.PI / 2)), 0, 4);
+    _player.onMove([1, 0, -1, 0][stickAngle], [0, 1, 0, -1][stickAngle]);
   }
 }
 
-function update() {
-  keyboard.update();
-  _pointer.update();
-  pointer.resetIsClicked();
-  matrix.print(bgStr, 1, 0, 0);
-  if (gameOverTicks >= 0) {
-    updateGameOver();
-  }
-  sga.update();
-  matrix.update();
-}
-
-view.init(init, update);
+game.init({
+  title: "XRD",
+  onInitialize,
+  onStartingGame,
+  onStartingGameOver,
+  onStartingTitle,
+  onClickCursor
+});
