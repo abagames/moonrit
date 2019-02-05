@@ -2,13 +2,17 @@
   "name": "moonrit",
   "version": "1.0.0",
   "description": "16 x 16 LED matrix games",
+  "config": {
+    "game": "xrd"
+  },
   "scripts": {
-    "watch": "parcel src/index.html -d tmp",
-    "build": "parcel build src/index.html -d docs --no-source-maps --public-url ./"
+    "watch": "cross-conf-env parcel src/%npm_package_config_game%/index.html -d tmp",
+    "build": "cross-conf-env parcel build src/%npm_package_config_game%/index.html -d docs/%npm_package_config_game% --no-source-maps --public-url ./"
   },
   "author": "abagames",
   "license": "MIT",
   "devDependencies": {
+    "cross-conf-env": "^1.1.2",
     "parcel-bundler": "^1.11.0",
     "parcel-plugin-clean-dist": "0.0.6",
     "typescript": "^3.2.4"

@@ -4,9 +4,9 @@
 
 ## Demo
 
-[XRD](https://abagames.github.io/moonrit/)
+[XRD](https://abagames.github.io/moonrit/xrd/)
 
-[![XRD screenshot](docs/screenshots/xrd.gif)](https://abagames.github.io/moonrit/)
+[![XRD screenshot](docs/screenshots/xrd.gif)](https://abagames.github.io/moonrit/xrd/)
 
 ## Acknowledgement
 

@@ -1,13 +1,13 @@
-import * as game from "./game";
-import * as matrix from "./matrix";
-import * as text from "./text";
-import * as sga from "./simpleGameActor";
-import { Actor } from "./actor";
-import * as keyboard from "./keyboard";
-import * as sound from "./sound";
-import { range, clamp, wrap } from "./math";
-import { Random } from "./random";
-import { Vector } from "./vector";
+import * as game from "../util/game";
+import * as matrix from "../util/matrix";
+import * as text from "../util/text";
+import * as sga from "../util/simpleGameActor";
+import { Actor } from "../util/actor";
+import * as keyboard from "../util/keyboard";
+import * as sound from "../util/sound";
+import { range, clamp, wrap } from "../util/math";
+import { Random } from "../util/random";
+import { Vector } from "../util/vector";
 
 function onInitialize() {
   initMarkSounds();
