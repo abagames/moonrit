@@ -12,13 +12,9 @@ export let descriptionContext: CanvasRenderingContext2D;
 let updateFunc: Function;
 let capturingCanvas: HTMLCanvasElement;
 let capturingContext: CanvasRenderingContext2D;
-let isCapturing: boolean;
+const isCapturing = false;
 
-export function init(
-  _initFunc: Function,
-  _updateFunc: Function,
-  _isCapturing = false
-) {
+export function init(_initFunc: Function, _updateFunc: Function) {
   updateFunc = _updateFunc;
   if (context != null) {
     _initFunc();
@@ -41,9 +37,8 @@ export function init(
   document.body.appendChild(canvas);
   document.body.appendChild(bloomCanvas);
   document.body.appendChild(descriptionCanvas);
-  isCapturing = _isCapturing;
   if (isCapturing) {
-    gcc.setOptions({ scale: 1, capturingFps: 60 });
+    gcc.setOptions({ scale: 0.5, capturingFps: 30 });
     capturingCanvas = document.createElement("canvas");
     capturingCanvas.width = size;
     capturingCanvas.height = size / 2;
