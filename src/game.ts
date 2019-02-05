@@ -5,16 +5,16 @@ import * as text from "./text";
 import * as sga from "./simpleGameActor";
 import { Actor } from "./actor";
 import * as keyboard from "./keyboard";
-import * as pointer from "./pointer";
+import { Pointer, init as initPointer, resetIsClicked } from "./pointer";
 import * as sound from "./sound";
 import { clamp } from "./math";
 import { Vector } from "./vector";
 
 type Scene = "title" | "game" | "gameOver";
 export let scene: Scene;
-export let _cursor;
-export let bgStr = "";
-let _pointer: pointer.Pointer;
+export let cursor;
+export let background = "";
+let pointer: Pointer;
 let options = {
   matrixOptions: { tempo: 300, isMarkerHorizontal: false },
   title: "",
@@ -38,8 +38,8 @@ export function init(_options?) {
 
 function initFirst() {
   keyboard.init({ isFourWaysStick: true, isUsingStickKeysAsButton: true });
-  pointer.init(sound.resumeAudioContext);
-  _pointer = new pointer.Pointer(
+  initPointer(sound.resumeAudioContext);
+  pointer = new Pointer(
     view.canvas,
     new Vector(view.size),
     false,
@@ -55,9 +55,9 @@ function initFirst() {
 
 function update() {
   keyboard.update();
-  _pointer.update();
-  pointer.resetIsClicked();
-  matrix.print(bgStr, 1, 0, 0);
+  pointer.update();
+  resetIsClicked();
+  matrix.print(background, 1, 0, 0);
   if (gameOverTicks >= 0) {
     updateGameOver();
   }
@@ -71,13 +71,13 @@ function update() {
   matrix.update();
 }
 
-export function setBgStr(str: string) {
-  bgStr = str;
+export function setBackground(str: string) {
+  background = str;
 }
 
 export function reset() {
   sga.reset();
-  _cursor = sga.spawn(cursor);
+  cursor = sga.spawn(cursorActor);
   scoreText = sga.spawn(text.text);
   scoreText.pos.y = 10;
 }
@@ -108,7 +108,7 @@ function startGame() {
   gameOverTicks = -1;
   options.onStartingGame();
   keyboard.clearJustPressed();
-  _pointer.clearJustPressed();
+  pointer.clearJustPressed();
 }
 
 function startTitle() {
@@ -122,7 +122,7 @@ function startGameOverOrTitle() {
   gameOverText = sga.spawn(text.text);
   gameOverText.pos.y = 1;
   keyboard.clearJustPressed();
-  _pointer.clearJustPressed();
+  pointer.clearJustPressed();
 }
 
 function updateGameOver() {
@@ -134,15 +134,12 @@ function updateGameOver() {
     gameOverText.setText((gameOverTicks / 60) % 2 === 0 ? "GAME" : "OVER");
   }
   gameOverTicks++;
-  if (
-    gameOverTicks > 30 &&
-    (keyboard.isJustPressed || _pointer.isJustPressed)
-  ) {
+  if (gameOverTicks > 30 && (keyboard.isJustPressed || pointer.isJustPressed)) {
     startGame();
   }
 }
 
-function cursor(a: Actor & { onClick: Function }) {
+function cursorActor(a: Actor & { onClick: Function }) {
   let flashTicks = 0;
   a.setPriority(0.5);
   a.onClick = (px, py) => {
@@ -153,14 +150,14 @@ function cursor(a: Actor & { onClick: Function }) {
     options.onClickCursor(a.pos);
   };
   a.addUpdater(() => {
-    if (_pointer.isJustPressed) {
+    if (pointer.isJustPressed) {
       const px = clamp(
-        Math.floor((_pointer.pos.x - matrix.offset.x) / led.size + 0.5),
+        Math.floor((pointer.pos.x - matrix.offset.x) / led.size + 0.5),
         0,
         15
       );
       const py = clamp(
-        Math.floor((_pointer.pos.y - matrix.offset.y) / led.size + 0.5),
+        Math.floor((pointer.pos.y - matrix.offset.y) / led.size + 0.5),
         0,
         15
       );

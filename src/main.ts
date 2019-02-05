@@ -76,7 +76,7 @@ function initStage() {
   isReached = false;
   reachedCount = 0;
   difficulty = 1;
-  game.setBgStr(`gggggggggggggggg
+  game.setBackground(`gggggggggggggggg
 ggg--gg--gg--ggg
 ${stage
   .map(s => {
@@ -206,18 +206,18 @@ function player(a: Actor & { onMove: Function }) {
       a.pos.set(pp);
     }
     if (a.pos.y === 1) {
-      const nextBgStr = `${game.bgStr.substr(
+      const nextBackground = `${game.background.substr(
         0,
         17 + a.pos.x - 1
-      )}ggg${game.bgStr.substr(17 + a.pos.x + 2)}`;
-      game.setBgStr(nextBgStr);
+      )}ggg${game.background.substr(17 + a.pos.x + 2)}`;
+      game.setBackground(nextBackground);
       onPlayerReached();
     }
     matrix.scheduleSound(instName, notes[15 - a.pos.y]);
   };
   a.addUpdater(() => {
     if (keyboard.isJustPressed && keyboard.stick.length > 0) {
-      game._cursor.onClick(
+      game.cursor.onClick(
         a.pos.x + keyboard.stick.x,
         a.pos.y + keyboard.stick.y
       );
@@ -356,7 +356,7 @@ function water(a: Actor) {
         if (a.pos.y === 0) {
           my = 1;
           if (reachedCount >= 3) {
-            game.setBgStr(
+            game.setBackground(
               range(16)
                 .map(() =>
                   range(16)
