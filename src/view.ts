@@ -97,11 +97,19 @@ function capture() {
   gcc.capture(capturingCanvas);
 }
 
+let lastFrameTime = 0;
+
 function update() {
   requestAnimationFrame(update);
+  const now = window.performance.now();
+  const timeSinceLast = now - lastFrameTime;
+  if (timeSinceLast < 1000 / 60 - 5) {
+    return;
+  }
   clear();
   updateFunc();
   if (isCapturing) {
     capture();
   }
+  lastFrameTime = now;
 }
