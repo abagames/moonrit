@@ -150,7 +150,10 @@ export function addMarkerSound(
 
 function stepMarker() {
   const ct = sound.audioContext.currentTime;
-  if (ct === 0 || ct > nextScheduledSecond) {
+  if (ct === 0) {
+    return;
+  }
+  if (ct > nextScheduledSecond) {
     nextScheduledSecond = ct + 0.1;
   }
   if (nextScheduledSecond - ct > 0.1) {
