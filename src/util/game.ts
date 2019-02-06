@@ -7,23 +7,31 @@ import { Actor } from "./actor";
 import * as keyboard from "./keyboard";
 import { Pointer, init as initPointer, resetIsClicked } from "./pointer";
 import * as sound from "./sound";
-import { clamp } from "./math";
+import { clamp, range } from "./math";
 import { Vector } from "./vector";
 
 type Scene = "title" | "game" | "gameOver";
 export let scene: Scene;
 export let cursor;
-export let background = "";
+export let background = range(16)
+  .map(() =>
+    range(16)
+      .map(() => "-")
+      .join("")
+  )
+  .join("\n");
 let pointer: Pointer;
 let options = {
-  matrixOptions: { tempo: 300, isMarkerHorizontal: false },
   title: "",
   description: "",
   onInitialize: () => {},
   onStartingTitle: () => {},
   onStartingGame: () => {},
   onStartingGameOver: () => {},
-  onClickCursor: (pos: Vector) => {}
+  onJustPressedCursor: (pos: Vector) => {},
+  onPressedCursor: (pos: Vector) => {},
+  matrixOptions: { tempo: 300, isMarkerHorizontal: false },
+  keyboardOptions: { isFourWaysStick: false, isUsingStickKeysAsButton: true }
 };
 let score: number;
 let scoreText;
@@ -37,7 +45,7 @@ export function init(_options?) {
 }
 
 function initFirst() {
-  keyboard.init({ isFourWaysStick: true, isUsingStickKeysAsButton: true });
+  keyboard.init(options.keyboardOptions);
   initPointer(sound.resumeAudioContext);
   pointer = new Pointer(
     view.canvas,
@@ -106,6 +114,7 @@ function startGame() {
   scene = "game";
   score = 0;
   gameOverTicks = -1;
+  reset();
   options.onStartingGame();
   keyboard.clearJustPressed();
   pointer.clearJustPressed();
@@ -139,18 +148,30 @@ function updateGameOver() {
   }
 }
 
-function cursorActor(a: Actor & { onClick: Function }) {
+function cursorActor(
+  a: Actor & { onJustPressed: Function; onPressed: Function }
+) {
   let flashTicks = 0;
+  let isFlashing = false;
   a.setPriority(0.5);
-  a.onClick = (px, py) => {
+  function show(px, py) {
     a.pos.set(px, py);
-    flashTicks = 5;
     a.str = "w";
     a.brightness = 3;
-    options.onClickCursor(a.pos);
+  }
+  a.onJustPressed = (px, py) => {
+    show(px, py);
+    flashTicks = 5;
+    options.onJustPressedCursor(a.pos);
+  };
+  a.onPressed = (px, py) => {
+    show(px, py);
+    isFlashing = true;
+    options.onPressedCursor(a.pos);
   };
   a.addUpdater(() => {
-    if (pointer.isJustPressed) {
+    isFlashing = false;
+    if (pointer.isJustPressed || pointer.isPressed) {
       const px = clamp(
         Math.floor((pointer.pos.x - matrix.offset.x) / led.size + 0.5),
         0,
@@ -161,10 +182,13 @@ function cursorActor(a: Actor & { onClick: Function }) {
         0,
         15
       );
-      a.onClick(px, py);
+      if (pointer.isJustPressed) {
+        a.onJustPressed(px, py);
+      }
+      a.onPressed(px, py);
     }
     flashTicks--;
-    if (flashTicks < 0) {
+    if (flashTicks < 0 && !isFlashing) {
       a.str = "";
       a.brightness = 0;
     }

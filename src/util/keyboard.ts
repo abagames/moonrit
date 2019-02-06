@@ -4,8 +4,11 @@ import * as sound from "./sound";
 
 export let isPressed = false;
 export let isJustPressed = false;
-export let stick = new Vector();
+export const stick = new Vector();
 export let stickAngle: number;
+export const isStickPressed = range(4).map(() => false);
+export const isStickJustPressed = range(4).map(() => false);
+
 let options = {
   isUsingStickKeysAsButton: false,
   isFourWaysStick: false
@@ -63,17 +66,22 @@ export function update() {
   }
   const pp = isPressed;
   isPressed = isJustPressed = false;
+  range(4).forEach(i => {
+    isStickPressed[i] = isStickJustPressed[i] = false;
+  });
   stick.set(0);
   stickKeys.forEach((ks, i) => {
     ks.forEach(k => {
       if (isKeyPressing[k] || isKeyPressed[k]) {
         stick.x += stickXys[i][0];
         stick.y += stickXys[i][1];
+        isStickPressed[i] = true;
         if (options.isUsingStickKeysAsButton) {
           isPressed = true;
         }
         if (isKeyPressed[k]) {
           isKeyPressed[k] = false;
+          isStickJustPressed[i] = true;
           if (options.isUsingStickKeysAsButton && !pp) {
             isJustPressed = true;
           }

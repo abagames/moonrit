@@ -217,7 +217,7 @@ function player(a: Actor & { onMove: Function }) {
   };
   a.addUpdater(() => {
     if (keyboard.isJustPressed && keyboard.stick.length > 0) {
-      game.cursor.onClick(
+      game.cursor.onJustPressed(
         a.pos.x + keyboard.stick.x,
         a.pos.y + keyboard.stick.y
       );
@@ -406,7 +406,7 @@ function onStartingTitle() {
   initStage();
 }
 
-function onClickCursor(pos) {
+function onJustPressedCursor(pos) {
   if (_player != null && _player.pos.distanceTo(pos)) {
     const oa = _player.pos.getAngle(pos);
     const stickAngle = wrap(Math.round(oa / (Math.PI / 2)), 0, 4);
@@ -421,5 +421,6 @@ game.init({
   onStartingGame,
   onStartingGameOver,
   onStartingTitle,
-  onClickCursor
+  onJustPressedCursor,
+  keyboardOptions: { isFourWaysStick: true, isUsingStickKeysAsButton: true }
 });
