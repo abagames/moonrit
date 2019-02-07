@@ -6,6 +6,7 @@ const win: any = window;
 const AudioContext = win.AudioContext || win.webkitAudioContext;
 export const audioContext = new AudioContext();
 let instruments: { [s: string]: any } = {};
+let loadingInstruments: { [s: string]: boolean } = {};
 let isEnabled = true;
 
 export function loadInstrument(name: string) {
@@ -16,9 +17,10 @@ export function loadInstrument(name: string) {
     isEnabled = false;
     return;
   }
-  if (instruments[name] != null) {
+  if (loadingInstruments[name] != null) {
     return;
   }
+  loadingInstruments[name] = true;
   (Soundfont.instrument as any)(audioContext, name, {
     soundfont: "FluidR3_GM"
   }).then((inst: any) => {
