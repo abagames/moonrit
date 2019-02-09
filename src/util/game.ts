@@ -31,7 +31,8 @@ let options = {
   onJustPressedCursor: (pos: Vector) => {},
   onPressedCursor: (pos: Vector) => {},
   matrixOptions: { tempo: 300, isMarkerHorizontal: false },
-  keyboardOptions: { isFourWaysStick: false, isUsingStickKeysAsButton: true }
+  keyboardOptions: { isFourWaysStick: false, isUsingStickKeysAsButton: true },
+  isDebugMode: false
 };
 let score: number;
 let scoreText;
@@ -53,11 +54,12 @@ function initFirst() {
     false,
     new Vector(0.5)
   );
+  pointer.isDebugMode = options.isDebugMode;
   text.init();
   sga.setActorClass(Actor);
   matrix.init(options.matrixOptions);
   options.onInitialize();
-  startTitle();
+  (options.isDebugMode ? startGame : startTitle)();
   descriptionTicks = 300;
   text.drawDescription(options.description);
 }
