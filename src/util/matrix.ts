@@ -67,9 +67,11 @@ export function print(
 export function printChar(
   c: string,
   brightnessIndex: number,
-  x: number,
-  y: number
+  _x: number,
+  _y: number
 ) {
+  const x = Math.floor(_x);
+  const y = Math.floor(_y);
   if (x < 0 || x >= count || y < 0 || y >= count) {
     return;
   }
@@ -89,6 +91,15 @@ export function update() {
     }
     markerLeds[x].update();
   }
+}
+
+export function getLed(_x: number, _y: number) {
+  const x = Math.floor(_x);
+  const y = Math.floor(_y);
+  if (x < 0 || x >= count || y < 0 || y >= count) {
+    return undefined;
+  }
+  return leds[x][y];
 }
 
 let scheduledSound: { instrumentName: string; note: string };
