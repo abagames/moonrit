@@ -17,16 +17,16 @@ function initMarkSounds() {
   const ms = matrix.addMarkerSound(
     (l, x, y) => l.brightnessIndex >= 2 && (_fire == null || y < _fire.pos.y)
   );
-  ms.add(0, "synth_drum", "major pentatonic", "A", 2, 2, 8);
-  ms.add(8, "synth_bass_2", "major pentatonic", "A", 2, 1, 8);
+  ms.add(0, "synth_drum", "major pentatonic", "A2", 2, 8);
+  ms.add(8, "synth_bass_2", "major pentatonic", "A2", 1, 8);
   const fms = matrix.addMarkerSound(
     (l, x, y) => _fire != null && y >= _fire.pos.y && l.colorIndex === 3
   );
-  fms.add(0, "synth_drum", "minor pentatonic", "A", 3, 2, 2);
-  fms.add(2, "synth_bass_2", "minor pentatonic", "A", 3, 1, 12);
-  fms.add(14, "synth_drum", "minor pentatonic", "A", 4, 2, 2);
+  fms.add(0, "synth_drum", "minor pentatonic", "A3", 2, 2);
+  fms.add(2, "synth_bass_2", "minor pentatonic", "A3", 1, 12);
+  fms.add(14, "synth_drum", "minor pentatonic", "A4", 2, 2);
   const wms = matrix.addMarkerSound(l => l.colorIndex === 6);
-  wms.add(0, "pad_3_polysynth", "major pentatonic", "A", 4, 1, 16);
+  wms.add(0, "pad_3_polysynth", "major pentatonic", "A4", 1, 16);
 }
 
 type StageType = "log" | "car" | "bank";
@@ -188,7 +188,7 @@ function resetPlayer() {
 function player(a: Actor & { onMove: Function }) {
   const instName = "pad_3_polysynth";
   sound.loadInstrument(instName);
-  const notes = sound.getNotes("major pentatonic", "A", 3, 1, 16);
+  const notes = sound.getNotes("major pentatonic", "A3", 1, 16);
   a.setPriority(0.25);
   a.pos.set(7, 13);
   const pp = new Vector();
@@ -244,7 +244,7 @@ function leftPlayer(a: Actor) {
 function playerOut(a: Actor) {
   const instName = "pad_3_polysynth";
   sound.loadInstrument(instName);
-  const notes = sound.getNotes("minor pentatonic", "A", 2, 1, 16);
+  const notes = sound.getNotes("minor pentatonic", "A2", 1, 16);
   a.setPriority(0.25);
   a.str = "w w\n w\nw w";
   a.pos.set(_player.pos.x - 1, _player.pos.y - 1);

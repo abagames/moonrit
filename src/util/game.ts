@@ -12,7 +12,7 @@ import { Vector } from "./vector";
 
 type Scene = "title" | "game" | "gameOver";
 export let scene: Scene;
-export let cursor;
+export let cursor: Actor & { onJustPressed: Function; onPressed: Function };
 export let background = range(16)
   .map(() =>
     range(16)
@@ -37,7 +37,7 @@ let score: number;
 let scoreText;
 let gameOverTicks: number;
 let gameOverText;
-let descriptionTicks = 300;
+let descriptionTicks: number;
 
 export function init(_options?) {
   options = { ...options, ..._options };
@@ -58,6 +58,7 @@ function initFirst() {
   matrix.init(options.matrixOptions);
   options.onInitialize();
   startTitle();
+  descriptionTicks = 300;
   text.drawDescription(options.description);
 }
 

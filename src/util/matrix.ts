@@ -110,12 +110,11 @@ export class MarkerSound {
     instrumentName: string,
     scale: string,
     baseNote: string,
-    baseOctave: number,
     skipCount: number,
     count: number
   ) {
     sound.loadInstrument(instrumentName);
-    const notes = sound.getNotes(scale, baseNote, baseOctave, skipCount, count);
+    const notes = sound.getNotes(scale, baseNote, skipCount, count);
     notes.forEach((note, i) => {
       this.sounds[pos + i] = { instrumentName, note };
     });

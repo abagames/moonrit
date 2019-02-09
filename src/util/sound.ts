@@ -27,18 +27,17 @@ export function loadInstrument(name: string) {
 export function getNotes(
   _scale: string,
   baseNote: string,
-  baseOctave: number,
   skipCount: number,
   count: number
 ) {
   const s = scale(_scale);
   const oc = Math.ceil((count * skipCount) / s.length);
+  const note = baseNote.substr(0, baseNote.length - 1);
+  const octave = parseInt(baseNote.charAt(baseNote.length - 1));
   return Array.prototype.concat
     .apply(
       [],
-      range(oc).map(oi =>
-        s.map((transpose as any)(`${baseNote}${baseOctave + oi}`))
-      )
+      range(oc).map(oi => s.map((transpose as any)(`${note}${octave + oi}`)))
     )
     .filter((_: any, i: number) => i % skipCount === 0)
     .splice(0, count);
