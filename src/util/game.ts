@@ -7,7 +7,7 @@ import { Actor } from "./actor";
 import * as keyboard from "./keyboard";
 import { Pointer, init as initPointer, resetIsClicked } from "./pointer";
 import * as sound from "./sound";
-import { clamp, range } from "./math";
+import { clamp, range, wrap } from "./math";
 import { Vector } from "./vector";
 
 type Scene = "title" | "game" | "gameOver";
@@ -84,6 +84,42 @@ function update() {
 
 export function setBackground(str: string) {
   background = str;
+}
+
+export function scrollBackground(
+  ox: number,
+  oy: number,
+  isLooping = false,
+  _str: string = undefined
+) {
+  const str = (_str == null ? background : _str).split("\n");
+  const nextStr = range(16)
+    .map(i => {
+      let y = i - oy;
+      if (isLooping) {
+        y = wrap(y, 0, 16);
+      } else {
+        if (y < 0 || y >= 16) {
+          return;
+        }
+      }
+      const l = str[y];
+      if (isLooping) {
+        return ox < 0
+          ? l.substr(-ox, 16 + ox) + l.substr(16 + ox, -ox)
+          : l.substr(16 - ox, ox) + l.substr(0, 16 - ox);
+      } else {
+        const pd = range(Math.abs(ox))
+          .map(() => " ")
+          .join("");
+        return ox < 0 ? l.substr(-ox, 16 + ox) + pd : pd + l.substr(0, 16 - ox);
+      }
+    })
+    .join("\n");
+  if (_str == null) {
+    background = nextStr;
+  }
+  return nextStr;
 }
 
 export function reset() {
