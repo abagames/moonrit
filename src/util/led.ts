@@ -11,11 +11,13 @@ export const colors = [
   0x03a9f4,
   0xeeeeee
 ];
+export const colorChars = "-rgybpcw";
 const brightnesss = [0, 0.4, 0.7, 1];
 const response = 0.36;
 
 export class Led {
   colorIndex = 0;
+  colorChar: string;
   brightnessIndex = 0;
   color = { r: 0, g: 0, b: 0 };
   targetColor = { r: 0, g: 0, b: 0 };
@@ -28,6 +30,7 @@ export class Led {
 
   setColor(colorIndex: number) {
     this.colorIndex = colorIndex;
+    this.colorChar = colorChars[colorIndex];
     const c = colors[colorIndex];
     this.targetColor = {
       r: (c & 0xff0000) >> 16,

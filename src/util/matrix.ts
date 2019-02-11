@@ -1,4 +1,4 @@
-import { Led, size as ledSize } from "./led";
+import { Led, size as ledSize, colorChars } from "./led";
 import * as sound from "./sound";
 import { range } from "./math";
 import { Vector } from "./vector";
@@ -75,7 +75,7 @@ export function printChar(
   if (x < 0 || x >= count || y < 0 || y >= count) {
     return;
   }
-  const ci = "-rgybpcw".indexOf(c);
+  const ci = colorChars.indexOf(c);
   if (ci < 0) {
     return;
   }
