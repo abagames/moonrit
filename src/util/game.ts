@@ -13,6 +13,7 @@ import { Vector } from "./vector";
 type Scene = "title" | "game" | "gameOver";
 export let scene: Scene;
 export let cursor: Actor & { onJustPressed: Function; onPressed: Function };
+export let scoreText;
 export let background = range(16)
   .map(() =>
     range(16)
@@ -32,17 +33,17 @@ let options = {
   onPressedCursor: (pos: Vector) => {},
   matrixOptions: { tempo: 300, isMarkerHorizontal: false },
   keyboardOptions: { isFourWaysStick: false, isUsingStickKeysAsButton: true },
-  isDebugMode: false
+  isDebugMode: false,
+  isCapturing: false
 };
 let score: number;
-let scoreText;
 let gameOverTicks: number;
 let gameOverText;
 let descriptionTicks: number;
 
 export function init(_options?) {
   options = { ...options, ..._options };
-  view.init(initFirst, update);
+  view.init(initFirst, update, options.isCapturing);
 }
 
 function initFirst() {
@@ -106,8 +107,8 @@ export function scrollBackground(
       const l = str[y];
       if (isLooping) {
         return ox < 0
-          ? l.substr(-ox, 16 + ox) + l.substr(16 + ox, -ox)
-          : l.substr(16 - ox, ox) + l.substr(0, 16 - ox);
+          ? l.substr(-ox, 16 + ox) + l.substr(0, 16 - ox)
+          : l.substr(16 - ox, ox) + l.substr(16 + ox, -ox);
       } else {
         const pd = range(Math.abs(ox))
           .map(() => " ")

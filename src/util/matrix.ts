@@ -122,12 +122,14 @@ export class MarkerSound {
     scale: string,
     baseNote: string,
     skipCount: number,
-    count: number
+    count: number,
+    isReversePos = false
   ) {
     sound.loadInstrument(instrumentName);
     const notes = sound.getNotes(scale, baseNote, skipCount, count);
+    const step = isReversePos ? -1 : 1;
     notes.forEach((note, i) => {
-      this.sounds[pos + i] = { instrumentName, note };
+      this.sounds[pos + i * step] = { instrumentName, note };
     });
   }
 

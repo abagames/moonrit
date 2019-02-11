@@ -12,10 +12,15 @@ export let descriptionContext: CanvasRenderingContext2D;
 let updateFunc: Function;
 let capturingCanvas: HTMLCanvasElement;
 let capturingContext: CanvasRenderingContext2D;
-const isCapturing = false;
+let isCapturing = false;
 
-export function init(_initFunc: Function, _updateFunc: Function) {
+export function init(
+  _initFunc: Function,
+  _updateFunc: Function,
+  _isCapturing: boolean
+) {
   updateFunc = _updateFunc;
+  isCapturing = _isCapturing;
   if (context != null) {
     _initFunc();
     return;
