@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "16 x 16 LED matrix games",
   "config": {
-    "game": "xrd"
+    "game": "jex"
   },
   "scripts": {
     "watch": "cross-conf-env parcel src/%npm_package_config_game%/index.html -d tmp",
