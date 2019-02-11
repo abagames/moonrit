@@ -8,6 +8,10 @@
 
 [![XRD screenshot](docs/screenshots/xrd.gif)](https://abagames.github.io/moonrit/xrd/)
 
+[JEX](https://abagames.github.io/moonrit/jex/)
+
+[![JEX screenshot](docs/screenshots/jex.gif)](https://abagames.github.io/moonrit/jex/)
+
 ## Acknowledgement
 
 ### Library
